@@ -1,9 +1,5 @@
 # 🏗️ Finance Manager — Architecture Plan
 
-> **Author**: Principal Software Architect
-> **Date**: 2026-03-30
-> **Status**: ✅ Approved — all technology choices confirmed by stakeholder
-
 ---
 
 ## 1. Project Overview
