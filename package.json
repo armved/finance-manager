@@ -1,0 +1,16 @@
+{
+  "name": "finance-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal finance tracking application",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r clean"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@10.8.1"
+}
