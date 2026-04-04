@@ -40,39 +40,36 @@
 
 > *"Hello world from both the API and the frontend."*
 
-#### Step 1.1 — Install everything (~30 min)
+#### ✅ Step 1.1 — Install everything (~30 min)
 
-> [!NOTE]
-> You probably have some of these already. Skip what you have.
-
-- [ ] Install **Node.js 22+** from [nodejs.org](https://nodejs.org) (LTS is fine)
-- [ ] Install **pnpm** globally: `npm install -g pnpm`
-- [ ] Install **Docker Desktop** from [docker.com](https://www.docker.com/products/docker-desktop/) — just install and start it, that's all for now
-- [ ] Install these **VS Code extensions** (optional but helpful):
+- [x] Install **Node.js 22+** from [nodejs.org](https://nodejs.org) (LTS is fine)
+- [x] Install **pnpm** globally: `npm install -g pnpm`
+- [x] Install **Docker Desktop** from [docker.com](https://www.docker.com/products/docker-desktop/) — just install and start it, that's all for now
+- [x] Install these **VS Code extensions** (optional but helpful):
   - ESLint
   - Tailwind CSS IntelliSense
   - Docker
   - Drizzle ORM (community)
 
-**✅ Win:** Run `node -v`, `pnpm -v`, `docker -v` — all three print version numbers.
+**Win:** Run `node -v`, `pnpm -v`, `docker -v` — all three print version numbers.
 
 ---
 
-#### Step 1.2 — Monorepo + Shared package (~45 min)
+#### ✅ Step 1.2 — Monorepo + Shared package (~45 min)
 
-- [ ] In `finance-manager/`, create the root config files:
+- [x] In `finance-manager/`, create the root config files:
   - `pnpm-workspace.yaml` — defines `packages/*` as workspaces
   - `package.json` — root with scripts
   - `tsconfig.base.json` — shared TypeScript config
-- [ ] Create `packages/shared/`:
+- [x] Create `packages/shared/`:
   - `package.json` (name: `@finance-manager/shared`)
   - `tsconfig.json` extending the base
   - `src/types/index.ts` — export a simple `Transaction` type
   - `src/schemas/index.ts` — export a simple Zod schema for a transaction
   - `src/index.ts` — barrel export
-- [ ] Run `pnpm install` from root — confirm no errors
+- [x] Run `pnpm install` from root — confirm no errors
 
-**✅ Win:** You have a monorepo structure. The shared package compiles. You can import types from it.
+**Win:** You have a monorepo structure. The shared package compiles. You can import types from it.
 
 ---
 
@@ -87,7 +84,7 @@
 - [ ] Run `pnpm --filter api dev` → see `Server listening on http://localhost:3001`
 - [ ] Open browser → `http://localhost:3001/api/health` → see `{ "status": "ok" }`
 
-**✅ Win:** You have a running API. It responds. It's real. 🎉
+**Win:** You have a running API. It responds. It's real. 🎉
 
 ---
 
@@ -104,7 +101,7 @@
 - [ ] Add a `dev` script, run `pnpm --filter web dev`
 - [ ] Open browser → `http://localhost:5173` → see "Finance Manager" and "It works!"
 
-**✅ Win:** Frontend is running. Both API and web can run simultaneously. The monorepo works.
+**Win:** Frontend is running. Both API and web can run simultaneously. The monorepo works.
 
 ---
 
@@ -143,7 +140,7 @@
 > [!TIP]
 > **Don't fear the schema file.** It's just TypeScript objects describing tables. Drizzle's syntax reads almost like SQL — you'll pick it up instantly with your TS background.
 
-**✅ Win:** Open Docker Desktop → click on the postgres container → open terminal → `psql -U finance finance_manager` → `\dt` → see all your tables listed. Your database is REAL.
+**Win:** Open Docker Desktop → click on the postgres container → open terminal → `psql -U finance finance_manager` → `\dt` → see all your tables listed. Your database is REAL.
 
 ---
 
@@ -160,7 +157,7 @@
 - [ ] Create a Fastify plugin (`src/plugins/db.ts`) that attaches `db` to the Fastify instance
 - [ ] Update `GET /api/health` to also query `SELECT 1` from the DB and confirm connection
 
-**✅ Win:** Hit `GET /api/health` → see `{ "status": "ok", "db": "connected" }`. The API talks to the database.
+**Win:** Hit `GET /api/health` → see `{ "status": "ok", "db": "connected" }`. The API talks to the database.
 
 ---
 
@@ -178,7 +175,7 @@
 - [ ] Update the home page to call `useHealthCheck()` and display the result:
   - Show "🟢 API Connected" or "🔴 API Down"
 
-**✅ Win:** Open the web app → see "🟢 API Connected, DB: connected". **The full stack is wired up.** Frontend → API → Database. This is the foundation. Everything else is building on top of this.
+**Win:** Open the web app → see "🟢 API Connected, DB: connected". **The full stack is wired up.** Frontend → API → Database. This is the foundation. Everything else is building on top of this.
 
 ---
 
@@ -223,7 +220,7 @@
 > [!TIP]
 > Use the **VS Code REST Client extension** or **Thunder Client** to test API calls without leaving VS Code. Or just use `curl` in the terminal if you prefer.
 
-**✅ Win:** You can create a transaction via API and get it back. The data persists in PostgreSQL. CRUD works.
+**Win:** You can create a transaction via API and get it back. The data persists in PostgreSQL. CRUD works.
 
 ---
 
@@ -249,7 +246,7 @@
   - `/categories` → Categories page (placeholder)
 - [ ] Style with Tailwind: dark background, clean typography, subtle hover effects on nav items
 
-**✅ Win:** A beautiful app shell with working navigation. Click sidebar links → pages switch. It looks like a real app already.
+**Win:** A beautiful app shell with working navigation. Click sidebar links → pages switch. It looks like a real app already.
 
 ---
 
@@ -275,7 +272,7 @@
 - [ ] Wire up the `/transactions` route to render `TransactionList`
 - [ ] Manually add 3-4 test transactions via API (or via seed script), then refresh the page
 
-**✅ Win:** Open `/transactions` → see your transactions listed with dates, amounts, and color-coded types. **You're looking at real data from your database in a real UI.**
+**Win:** Open `/transactions` → see your transactions listed with dates, amounts, and color-coded types. **You're looking at real data from your database in a real UI.**
 
 ---
 
@@ -298,7 +295,7 @@
   - On success: close dialog, list refreshes automatically (TanStack Query invalidation)
 - [ ] Add the "➕ Add Transaction" button to the transactions page (top-right, prominent)
 
-**✅ Win:** Click "Add Transaction" → fill in the form → submit → dialog closes → the new transaction appears in the list instantly. **This is the core loop of the entire app. You just built it.** 🎉
+**Win:** Click "Add Transaction" → fill in the form → submit → dialog closes → the new transaction appears in the list instantly. **This is the core loop of the entire app. You just built it.** 🎉
 
 ---
 
@@ -309,7 +306,7 @@
 - [ ] Add a "Delete" button (with confirmation) that calls `useDeleteTransaction()`
 - [ ] On success: list refreshes, toast notification or subtle animation
 
-**✅ Win:** Full CRUD from the UI. Add, edit, delete — all from the browser. You never need to touch the API directly again.
+**Win:** Full CRUD from the UI. Add, edit, delete — all from the browser. You never need to touch the API directly again.
 
 ---
 
@@ -331,7 +328,7 @@
     - `GET /api/analytics/summary?start=2026-04-01&end=2026-04-30`
 - [ ] Test: add a few transactions via the UI, then hit the analytics endpoints
 
-**✅ Win:** The API returns your spending summary. Real numbers from real data you entered.
+**Win:** The API returns your spending summary. Real numbers from real data you entered.
 
 ---
 
@@ -351,7 +348,7 @@
   - Style: use shadcn `Card` components, clean grid layout
 - [ ] If no data: show friendly empty state — "No transactions this month. Start tracking!"
 
-**✅ Win:** Open the dashboard → see your monthly income, expenses, net balance, and a pie chart of where your money went. **The app is now genuinely useful.** You can track your finances. This is the moment.
+**Win:** Open the dashboard → see your monthly income, expenses, net balance, and a pie chart of where your money went. **The app is now genuinely useful.** You can track your finances. This is the moment.
 
 ---
 
@@ -383,7 +380,7 @@
   - `category.routes.ts` — standard CRUD endpoints
 - [ ] Protect the default "Uncategorized" category from deletion
 
-**✅ Win:** Category CRUD works via API. Default category can't be deleted.
+**Win:** Category CRUD works via API. Default category can't be deleted.
 
 ---
 
@@ -396,7 +393,7 @@
   - Delete button → confirmation dialog that asks "Reassign transactions to:" with category dropdown
 - [ ] Update the transaction form's category dropdown to show user-created categories
 
-**✅ Win:** Create categories like "Groceries", "Salary", "Entertainment" → they appear in the transaction form dropdown.
+**Win:** Create categories like "Groceries", "Salary", "Entertainment" → they appear in the transaction form dropdown.
 
 ---
 
@@ -422,7 +419,7 @@
   - `move(id, newParentId)` — update parent_id with cycle detection
 - [ ] Update `GET /api/categories` to return the tree structure
 
-**✅ Win:** API returns a nested tree. Categories like `Food > Groceries > Organic` work.
+**Win:** API returns a nested tree. Categories like `Food > Groceries > Organic` work.
 
 ---
 
@@ -436,7 +433,7 @@
 - [ ] Update the transaction form's category selector:
   - Show as a tree dropdown (indented names, e.g., `Food > Groceries`)
 
-**✅ Win:** Visual category tree with collapsible hierarchy. Clean and satisfying to interact with.
+**Win:** Visual category tree with collapsible hierarchy. Clean and satisfying to interact with.
 
 ---
 
@@ -453,7 +450,7 @@
 - [ ] Update transaction create/update to accept `merchantId` and `tagIds`
 - [ ] Update transaction list to include merchant name and tag names in response
 
-**✅ Win:** Transactions can now carry merchant and tag data.
+**Win:** Transactions can now carry merchant and tag data.
 
 ---
 
@@ -465,7 +462,7 @@
   - **Tags**: multi-select combobox — search and select multiple tags, create new inline
 - [ ] Update transaction list to show merchant name and tag badges
 
-**✅ Win:** When adding a transaction, you can type "Amazon" → select or create the merchant → add tags like "electronics", "personal". Feels professional.
+**Win:** When adding a transaction, you can type "Amazon" → select or create the merchant → add tags like "electronics", "personal". Feels professional.
 
 ---
 
@@ -486,7 +483,7 @@
 - [ ] Add pagination (or infinite scroll) if the list gets long
 - [ ] Show active filter count badge
 
-**✅ Win:** Filter your transactions by any dimension. "Show me all expenses at Amazon in March" — done.
+**Win:** Filter your transactions by any dimension. "Show me all expenses at Amazon in March" — done.
 
 ---
 
@@ -502,7 +499,7 @@
 - [ ] **Error boundaries**: catch and display API errors gracefully
 - [ ] **Responsive design**: test on mobile viewport, ensure sidebar collapses, forms are usable on small screens
 
-**✅ Win:** The app feels polished. No janky loading, no cryptic errors, works on your phone's browser.
+**Win:** The app feels polished. No janky loading, no cryptic errors, works on your phone's browser.
 
 ---
 
@@ -532,7 +529,7 @@
   ```
 - [ ] Run `docker compose up --build` → entire app runs in containers
 
-**✅ Win:** `docker compose up` on your Raspberry Pi → open `http://<pi-ip>` on your phone → full app, tracked finances, charts. **Project complete.** 🏆
+**Win:** `docker compose up` on your Raspberry Pi → open `http://<pi-ip>` on your phone → full app, tracked finances, charts. **Project complete.** 🏆
 
 ---
 
