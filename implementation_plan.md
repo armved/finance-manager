@@ -73,16 +73,16 @@
 
 ---
 
-#### Step 1.3 — API "Hello World" with Fastify (~45 min)
+#### ✅ Step 1.3 — API "Hello World" with Fastify (~45 min)
 
-- [ ] Create `packages/api/`:
+- [x] Create `packages/api/`:
   - `package.json` (name: `@finance-manager/api`, depends on `@finance-manager/shared`)
   - `tsconfig.json`
   - Install deps: `fastify`, `@fastify/cors`, `tsx` (for dev running)
   - `src/app.ts` — create a Fastify server with one route: `GET /api/health` → `{ status: "ok" }`
   - Add a `dev` script: `tsx watch src/app.ts`
-- [ ] Run `pnpm --filter api dev` → see `Server listening on http://localhost:3001`
-- [ ] Open browser → `http://localhost:3001/api/health` → see `{ "status": "ok" }`
+- [x] Run `pnpm --filter api dev` → see `Server listening on http://localhost:3001`
+- [x] Open browser → `http://localhost:3001/api/health` → see `{ "status": "ok" }`
 
 **Win:** You have a running API. It responds. It's real. 🎉
 

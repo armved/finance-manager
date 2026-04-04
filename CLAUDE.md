@@ -25,6 +25,14 @@ pnpm clean
 
 Package manager: **pnpm** (v10.8.1). Node >=22 required. Do not use npm or yarn.
 
+## API Testing
+
+API requests are tested with **Bruno**. The collection lives in `bruno/` at the repo root.
+
+To use it: open Bruno → **Open Collection** → select the `bruno/` folder → activate the **local** environment (`http://localhost:3001`).
+
+Requests are organised into subdirectories by domain (e.g. `bruno/health/`, `bruno/transactions/`). Add a new `.bru` file in the matching subdirectory whenever a new endpoint is implemented.
+
 ## Architecture
 
 This is a **pnpm monorepo** with three packages under `packages/`:
