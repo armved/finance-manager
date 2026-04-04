@@ -2,7 +2,7 @@ import { z } from "zod";
 import { categoryTypeSchema, nameSchema, iconSchema, colorSchema } from "./common";
 
 export const createCategorySchema = z.object({
-  name: nameSchema.pipe(z.string().max(100)),
+  name: nameSchema.max(100),
   parentId: z.string().uuid("Invalid parent category ID").nullish(),
   type: categoryTypeSchema,
   sortOrder: z.number().int().nonnegative().optional().default(0),

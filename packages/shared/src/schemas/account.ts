@@ -2,7 +2,7 @@ import { z } from "zod";
 import { nameSchema, monetaryAmountSchema } from "./common";
 
 export const createAccountSchema = z.object({
-  name: nameSchema.pipe(z.string().max(100)),
+  name: nameSchema.max(100),
   currencyCode: z.string().length(3, "Currency code must be exactly 3 characters"),
   initialBalance: monetaryAmountSchema.or(z.literal(0)).optional().default(0),
 });
