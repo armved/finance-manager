@@ -54,7 +54,7 @@ A **personal finance tracking application** for a single user, deployed on a Ras
 |---|---|---|
 | **Monorepo** | **pnpm workspaces** | Simple, fast, no extra tooling needed |
 | **Deployment** | **Raspberry Pi** via Docker Compose | PostgreSQL + API + (optionally) static frontend, all containerized |
-| **Reverse Proxy** | **Caddy** (optional) | Auto-HTTPS, simple config, low resource usage on Pi |
+| **Reverse Proxy** | **Caddy** | Listens on `:80`/`:443`, serves the web app, and proxies `/api/*` to the API service internally. The browser always uses `/api` as a relative base URL — no ports or hostnames in frontend code. Works identically in dev (Vite proxy) and prod (Caddy). **Required** — the app must be accessible from outside the home network (e.g. from a phone on mobile data) for transaction tracking on the go and for the future mobile companion app |
 
 ---
 

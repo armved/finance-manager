@@ -24,5 +24,8 @@ pgdata/
 # Logs
 *.log
 
+# TanStack Router temp directory
+.tanstack/
+
 # AI
 .claude/

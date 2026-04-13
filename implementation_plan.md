@@ -88,18 +88,18 @@
 
 ---
 
-#### Step 1.4 — Web "Hello World" with Vite + React (~45 min)
+#### ✅ Step 1.4 — Web "Hello World" with Vite + React (~45 min)
 
-- [ ] Create `packages/web/` using Vite:
+- [x] Create `packages/web/` using Vite:
   - Run `pnpm create vite packages/web --template react-ts` (or scaffold manually)
   - Name: `@finance-manager/web`, add dependency on `@finance-manager/shared`
   - Install additional deps: TanStack Router, TanStack Query, Tailwind CSS v4
   - Set up Tailwind CSS v4 (just the base import — no custom config needed yet)
-- [ ] Create a minimal `App.tsx` with TanStack Router:
+- [x] Create a minimal `App.tsx` with TanStack Router:
   - Root layout with just `<h1>Finance Manager</h1>`
   - One route: `/` → `<p>It works!</p>`
-- [ ] Add a `dev` script, run `pnpm --filter web dev`
-- [ ] Open browser → `http://localhost:5173` → see "Finance Manager" and "It works!"
+- [x] Add a `dev` script, run `pnpm --filter web dev`
+- [x] Open browser → `http://localhost:5173` → see "Finance Manager" and "It works!"
 
 **Win:** Frontend is running. Both API and web can run simultaneously. The monorepo works.
 
@@ -169,7 +169,7 @@
 
 - [ ] In `packages/web/`:
   - Set up TanStack Query provider in `main.tsx` (QueryClient + QueryClientProvider)
-  - Create `src/api/client.ts` — a simple `fetch` wrapper with the base URL (`http://localhost:3001/api`)
+  - Create `src/api/client.ts` — a simple `fetch` wrapper with the base URL (`/api` — relative, no hardcoded host/port; Vite proxy handles dev, Caddy handles prod)
   - Create `src/api/health.ts` — a `useHealthCheck()` query hook
   - Proxy API requests in `vite.config.ts` (proxy `/api` → `localhost:3001`) to avoid CORS issues
 - [ ] Update the home page to call `useHealthCheck()` and display the result:
@@ -509,7 +509,7 @@
   - Multi-stage build: build TypeScript → run with Node
   - Include migration + seed as part of startup
 - [ ] Create a `Dockerfile` for the Web:
-  - Build the Vite static bundle → serve with a lightweight HTTP server (or Caddy)
+  - Build the Vite static bundle → served by Caddy (see below)
 - [ ] Update `docker-compose.yml`:
   ```yaml
   services:
@@ -521,13 +521,29 @@
       depends_on: [db]
       environment:
         DATABASE_URL: postgresql://finance:finance@db:5432/finance_manager
-    web:
-      build: ./packages/web
-      depends_on: [api]
+    caddy:
+      image: caddy:2
       ports:
         - "80:80"
+        - "443:443"
+      volumes:
+        - ./Caddyfile:/etc/caddy/Caddyfile
+        - caddy_data:/data
+      depends_on: [api]
+  volumes:
+    caddy_data:
   ```
-- [ ] Run `docker compose up --build` → entire app runs in containers
+- [ ] Create `Caddyfile` in repo root:
+  ```
+  your-domain-or-ddns {
+      reverse_proxy /api/* api:3001
+      root * /srv
+      file_server
+  }
+  ```
+- [ ] Configure port forwarding on your router: ports 80 + 443 → Pi's local IP
+- [ ] Set up a free DDNS hostname (e.g. DuckDNS) so your Pi is reachable from mobile data
+- [ ] Run `docker compose up --build` → entire app runs in containers, HTTPS handled automatically by Caddy
 
 **Win:** `docker compose up` on your Raspberry Pi → open `http://<pi-ip>` on your phone → full app, tracked finances, charts. **Project complete.** 🏆
 
