@@ -109,9 +109,9 @@
 
 > *"PostgreSQL is running, the schema exists, and seed data is in."*
 
-#### Step 2.1 — PostgreSQL via Docker + Drizzle schema (~60 min)
+#### ✅ Step 2.1 — PostgreSQL via Docker + Drizzle schema (~60 min)
 
-- [ ] Create `docker-compose.yml` in root with **just PostgreSQL**:
+- [x] Create `docker-compose.yml` in root with **just PostgreSQL**:
   ```yaml
   services:
     db:
@@ -127,15 +127,15 @@
   volumes:
     pgdata:
   ```
-- [ ] Run `docker compose up -d` — PostgreSQL is now running. That's it. That's Docker for now.
-- [ ] In `packages/api/`:
+- [x] Run `docker compose up -d` — PostgreSQL is now running. That's it. That's Docker for now.
+- [x] In `packages/api/`:
   - Install: `drizzle-orm`, `postgres` (driver), `drizzle-kit`, `dotenv`
   - Create `.env`: `DATABASE_URL=postgresql://finance:finance@localhost:5432/finance_manager`
   - Create `src/db/schema.ts` — define ALL tables from the architecture plan:
     - `currencies`, `accounts`, `categories`, `merchants`, `tags`, `transactions`, `transactionTags`, `transfers`
   - Create `drizzle.config.ts` pointing to the schema
-- [ ] Run `pnpm drizzle-kit generate` → see SQL migration files appear
-- [ ] Run `pnpm drizzle-kit migrate` → tables are created in PostgreSQL
+- [x] Run `pnpm drizzle-kit generate` → see SQL migration files appear
+- [x] Run `pnpm drizzle-kit migrate` → tables are created in PostgreSQL
 
 > [!TIP]
 > **Don't fear the schema file.** It's just TypeScript objects describing tables. Drizzle's syntax reads almost like SQL — you'll pick it up instantly with your TS background.

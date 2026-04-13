@@ -1,0 +1,34 @@
+import { pgTable, uuid, decimal, date, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { transactionTypeEnum } from "./enums";
+import { accounts } from "./accounts";
+import { categories } from "./categories";
+import { merchants } from "./merchants";
+import { tags } from "./tags";
+
+// amount is always positive; direction is encoded in `type`.
+// transaction_date is a DATE — no timezone handling needed.
+export const transactions = pgTable("transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: transactionTypeEnum("type").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  transactionDate: date("transaction_date").notNull(),
+  accountId: uuid("account_id").notNull().references(() => accounts.id),
+  categoryId: uuid("category_id").notNull().references(() => categories.id),
+  merchantId: uuid("merchant_id").references(() => merchants.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Many-to-many: one transaction → many tags, one tag → many transactions.
+export const transactionTags = pgTable(
+  "transaction_tags",
+  {
+    transactionId: uuid("transaction_id")
+      .notNull()
+      .references(() => transactions.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.transactionId, table.tagId] })],
+);
