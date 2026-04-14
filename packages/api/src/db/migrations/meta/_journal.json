@@ -15,6 +15,20 @@
       "when": 1776199769024,
       "tag": "0001_military_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776206616690,
+      "tag": "0002_vengeful_killer_shrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776207534479,
+      "tag": "0003_safe_grandmaster",
+      "breakpoints": true
     }
   ]
 }

@@ -16,7 +16,10 @@ export const transactions = pgTable("transactions", {
   categoryId: uuid("category_id").notNull().references(() => categories.id),
   merchantId: uuid("merchant_id").references(() => merchants.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
 });
 
 // Many-to-many: one transaction → many tags, one tag → many transactions.

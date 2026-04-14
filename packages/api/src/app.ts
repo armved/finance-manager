@@ -1,9 +1,9 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import sensible from "@fastify/sensible";
-import { sql } from "drizzle-orm";
 import { config, isDev } from "./config";
 import { dbPlugin } from "./plugins/db";
+import { healthRoutes } from "./routes/health";
 
 export async function buildApp() {
   const app = Fastify({
@@ -22,26 +22,15 @@ export async function buildApp() {
   // ── Plugins ────────────────────────────────────────────────────────────────
 
   await app.register(cors, {
-    // Allow all origins in dev. Lock this down in production via env var.
-    origin: isDev ? true : (process.env.CORS_ORIGIN ?? false),
+    origin: isDev ? true : (config.corsOrigin ?? false),
   });
 
-  // Adds app.httpErrors helpers (notFound, badRequest, etc.) and a clean
-  // 404 handler for unmatched routes.
   await app.register(sensible);
-
-  // Attaches app.db (Drizzle instance) and manages the connection pool lifecycle.
   await app.register(dbPlugin);
 
   // ── Routes ─────────────────────────────────────────────────────────────────
 
-  app.get("/api/health", async (request) => {
-    // Run a cheap query to confirm the database connection is alive.
-    // Health checks are used by load balancers and uptime monitors — returning
-    // { status: "ok" } when the DB is actually down would give false confidence.
-    await request.server.db.execute(sql`SELECT 1`);
-    return { status: "ok", db: "connected" };
-  });
+  await app.register(healthRoutes);
 
   return app;
 }

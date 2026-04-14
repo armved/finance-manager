@@ -1,4 +1,12 @@
-import { pgTable, uuid, varchar, integer, boolean, timestamp, type AnyPgColumn } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  integer,
+  boolean,
+  timestamp,
+  type AnyPgColumn,
+} from "drizzle-orm/pg-core";
 import { categoryTypeEnum } from "./enums";
 
 // Self-referencing via parent_id for infinite hierarchy.
@@ -13,5 +21,8 @@ export const categories = pgTable("categories", {
   color: varchar("color", { length: 7 }), // hex #RRGGBB
   isDefault: boolean("is_default").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
 });

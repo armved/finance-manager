@@ -15,6 +15,9 @@ export const config = {
   logLevel: process.env.LOG_LEVEL ?? "info",
   nodeEnv: process.env.NODE_ENV ?? "development",
   databaseUrl: requireEnv("DATABASE_URL"),
+  // Optional: lock down CORS in production by setting this to your frontend URL.
+  // If unset in production, all cross-origin requests are rejected.
+  corsOrigin: process.env.CORS_ORIGIN,
 } as const;
 
 export const isDev = config.nodeEnv === "development";

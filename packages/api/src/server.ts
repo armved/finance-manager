@@ -4,12 +4,7 @@ import { config } from "./config";
 async function start() {
   const app = await buildApp();
 
-  try {
-    await app.listen({ port: config.port, host: config.host });
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+  await app.listen({ port: config.port, host: config.host });
 
   const shutdown = async () => {
     app.log.info("Shutting down...");
@@ -21,4 +16,9 @@ async function start() {
   process.once("SIGTERM", shutdown);
 }
 
-start();
+// Catch startup errors (e.g. port in use, DB unreachable) and exit with a
+// clear message instead of an unhandled promise rejection warning.
+start().catch((err) => {
+  console.error("Fatal startup error:", err);
+  process.exit(1);
+});

@@ -75,7 +75,9 @@ This is a **pnpm monorepo** with three packages under `packages/`:
 
 ### Routing structure (`packages/api`)
 
-Modules follow the pattern: `<domain>.routes.ts` → `<domain>.service.ts` → `<domain>.repository.ts`. All modules live under `src/modules/`.
+Business domain modules live under `src/modules/` and follow the pattern: `<domain>.routes.ts` → `<domain>.service.ts` → `<domain>.repository.ts`.
+
+Infrastructure routes (health checks, etc.) that have no service/repository layer live under `src/routes/`.
 
 ### MVP scope
 

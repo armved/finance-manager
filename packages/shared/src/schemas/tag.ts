@@ -2,7 +2,7 @@ import { z } from "zod";
 import { nameSchema, colorSchema } from "./common";
 
 export const createTagSchema = z.object({
-  name: nameSchema.pipe(z.string().max(100)),
+  name: nameSchema.max(100),
   color: colorSchema,
 });
 
