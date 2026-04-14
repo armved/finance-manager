@@ -165,14 +165,14 @@
 
 > *"The web app fetches real data from the API."*
 
-#### Step 3.1 — TanStack Query + first API call (~45 min)
+#### ✅ Step 3.1 — TanStack Query + first API call (~45 min)
 
-- [ ] In `packages/web/`:
+- [x] In `packages/web/`:
   - Set up TanStack Query provider in `main.tsx` (QueryClient + QueryClientProvider)
   - Create `src/api/client.ts` — a simple `fetch` wrapper with the base URL (`/api` — relative, no hardcoded host/port; Vite proxy handles dev, Caddy handles prod)
   - Create `src/api/health.ts` — a `useHealthCheck()` query hook
   - Proxy API requests in `vite.config.ts` (proxy `/api` → `localhost:3001`) to avoid CORS issues
-- [ ] Update the home page to call `useHealthCheck()` and display the result:
+- [x] Update the home page to call `useHealthCheck()` and display the result:
   - Show "🟢 API Connected" or "🔴 API Down"
 
 **Win:** Open the web app → see "🟢 API Connected, DB: connected". **The full stack is wired up.** Frontend → API → Database. This is the foundation. Everything else is building on top of this.

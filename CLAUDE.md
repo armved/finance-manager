@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Ground rules
+
+- **Never commit or push without explicit user request.** Always wait to be told before running any `git commit` or `git push`.
+
 ## Commands
 
 ```bash
@@ -60,6 +64,14 @@ This is a **pnpm monorepo** with three packages under `packages/`:
 ### AI adapter pattern (v2+)
 
 `packages/api/src/ai/ai.adapter.ts` defines `IAITransactionParser` with a single method `parseImage(image, mimeType)`. Provider implementations (OpenAI, Google, Mock) are selected via `AI_PROVIDER` env var. The interface is defined now so it can be plugged in later without refactoring.
+
+### Frontend API layer (`packages/web/src/api/`)
+
+- All API calls go through `apiFetch<T>(path, options?)` from `src/api/client.ts`. Never call `fetch()` directly in hooks — `apiFetch` throws `ApiError` on non-2xx responses, which TanStack Query needs to treat them as errors.
+- Every query hook file exports a `*QueryKey` const alongside the hook. This allows other parts of the app to invalidate or prefetch the same query without duplicating the key string.
+- Query hook files are co-located by domain: `src/api/health.ts`, `src/api/transactions.ts`, etc.
+- ReactQueryDevtools is mounted in `main.tsx` (automatically excluded from production builds).
+- `staleTime` is `0` in dev (always refetch) and `60s` in production (`import.meta.env.PROD`).
 
 ### Routing structure (`packages/api`)
 
