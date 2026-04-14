@@ -5,8 +5,4 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
   "expense",
 ]);
 
-export const categoryTypeEnum = pgEnum("category_type", [
-  "income",
-  "expense",
-  "any",
-]);
+export const categoryTypeEnum = pgEnum("category_type", ["income", "expense"]);

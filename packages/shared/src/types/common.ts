@@ -1,5 +1,5 @@
 export type TransactionType = "income" | "expense";
-export type CategoryType = "income" | "expense" | "any";
+export type CategoryType = "income" | "expense";
 
 export interface PaginatedResponse<T> {
   data: T[];

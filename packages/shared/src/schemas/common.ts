@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // ── Enum schemas ──────────────────────────────────────────────
 export const transactionTypeSchema = z.enum(["income", "expense"]);
-export const categoryTypeSchema = z.enum(["income", "expense", "any"]);
+export const categoryTypeSchema = z.enum(["income", "expense"]);
 
 // ── Reusable field schemas ────────────────────────────────────
 // Shared across multiple entities to avoid duplicating validation

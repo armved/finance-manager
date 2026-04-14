@@ -7,7 +7,7 @@ export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 100 }).notNull(),
   parentId: uuid("parent_id").references((): AnyPgColumn => categories.id),
-  type: categoryTypeEnum("type").notNull().default("any"),
+  type: categoryTypeEnum("type").notNull(),
   sortOrder: integer("sort_order").notNull().default(0),
   icon: varchar("icon", { length: 50 }),
   color: varchar("color", { length: 7 }), // hex #RRGGBB

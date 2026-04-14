@@ -144,18 +144,18 @@
 
 ---
 
-#### Step 2.2 — Seed data + DB connection in the API (~45 min)
+#### ✅ Step 2.2 — Seed data + DB connection in the API (~45 min)
 
-- [ ] Create `src/db/index.ts` — export a `db` instance using the Drizzle postgres driver
-- [ ] Create `src/db/seed.ts`:
+- [x] Create `src/db/index.ts` — export a `db` instance using the Drizzle postgres driver
+- [x] Create `src/db/seed.ts`:
   - Insert the default currency (USD)
   - Insert the default account (Main Account)
   - Insert default category (Uncategorized, type: "any", isDefault: true)
   - Make it idempotent (check before insert, so you can run it multiple times)
-- [ ] Add a `seed` script to `package.json`: `tsx src/db/seed.ts`
-- [ ] Run `pnpm --filter api seed` → seed data is inserted
-- [ ] Create a Fastify plugin (`src/plugins/db.ts`) that attaches `db` to the Fastify instance
-- [ ] Update `GET /api/health` to also query `SELECT 1` from the DB and confirm connection
+- [x] Add a `db:seed` script to `package.json`: `node --env-file=.env --import tsx/esm src/db/seed.ts`
+- [x] Run `pnpm --filter api db:seed` → seed data is inserted
+- [x] Create a Fastify plugin (`src/plugins/db.ts`) that attaches `db` to the Fastify instance
+- [x] Update `GET /api/health` to also query `SELECT 1` from the DB and confirm connection
 
 **Win:** Hit `GET /api/health` → see `{ "status": "ok", "db": "connected" }`. The API talks to the database.
 

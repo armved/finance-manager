@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed": "node --env-file=.env --import tsx/esm src/db/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
@@ -17,6 +18,7 @@
     "@finance-manager/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.2.1",
+    "fastify-plugin": "^5.1.0",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
