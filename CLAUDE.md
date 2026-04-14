@@ -53,7 +53,8 @@ This is a **pnpm monorepo** with three packages under `packages/`:
 - `transaction_date` is a `DATE` (not timestamp) — no timezone handling needed.
 - Transfers are modeled as two linked transactions (expense on source, income on destination) joined via a `transfer` table — keeps aggregation queries clean.
 - Categories are self-referencing (`parent_id`) for infinite hierarchy; PostgreSQL recursive CTEs are used to query the full tree.
-- Exactly one category has `is_default = true` (seed: "Uncategorized").
+- Each transaction type has exactly one default category with `is_default = true` (seed: "Uncategorized" for both `income` and `expense`). There is no `any` category type.
+- Default currency is **EUR**.
 - Account balance = `initial_balance` + SUM(incomes) − SUM(expenses) — never stored directly.
 
 ### AI adapter pattern (v2+)
