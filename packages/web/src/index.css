@@ -1,1 +1,5 @@
 @import "tailwindcss";
+@import "./styles/themes/dark.css"; /* ← swap this line to switch themes */
+@import "./styles/semantic.css";
+@import "./styles/bindings.css";
+@import "./styles/base.css";

@@ -1,0 +1,78 @@
+/* =============================================================================
+   SEMANTIC ASSIGNMENTS
+   Maps palette scale steps to semantic role names. Shared across all themes.
+   Every value is a var() reference — no raw color values here.
+
+   Note: if a future theme needs a fundamentally different mapping (e.g. a
+   light theme where --background points to neutral-50 instead of neutral-950),
+   override only the affected variables inside that theme file.
+   ============================================================================= */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+
+    /* Surfaces */
+    --background:       var(--color-neutral-950);
+    --surface:          var(--color-neutral-900);
+    --surface-raised:   var(--color-neutral-800);
+    --surface-overlay:  var(--color-neutral-700);
+
+    /* Text */
+    --foreground:       var(--color-neutral-50);
+    --muted-foreground: var(--color-neutral-400);
+
+    /* Primary brand */
+    --primary:            var(--color-primary-500);
+    --primary-foreground: var(--color-neutral-50);
+
+    /* Secondary */
+    --secondary:            var(--color-neutral-800);
+    --secondary-foreground: var(--color-neutral-50);
+
+    /* Muted */
+    --muted: var(--color-neutral-800);
+
+    /* Accent */
+    --accent:            var(--color-neutral-700);
+    --accent-foreground: var(--color-neutral-50);
+
+    /* shadcn/ui aliases */
+    --card:               var(--color-neutral-900);
+    --card-foreground:    var(--color-neutral-50);
+    --popover:            var(--color-neutral-800);
+    --popover-foreground: var(--color-neutral-50);
+
+    /* Destructive */
+    --destructive:            var(--color-danger-500);
+    --destructive-foreground: var(--color-neutral-50);
+
+    /* Chrome */
+    --border: var(--color-neutral-700);
+    --input:  var(--color-neutral-700);
+    --ring:   var(--color-primary-500);
+
+    /* Finance domain */
+    --income:          var(--color-success-500);
+    --income-subtle:   var(--color-success-900);
+    --expense:         var(--color-danger-500);
+    --expense-subtle:  var(--color-danger-900);
+    --transfer:        var(--color-warning-500);
+    --transfer-subtle: var(--color-warning-900);
+
+    /* Typography */
+    --font-family-sans: 'Inter', ui-sans-serif, system-ui, -apple-system,
+                        BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-family-mono: 'JetBrains Mono', 'Fira Code', ui-monospace,
+                        'Cascadia Code', 'Source Code Pro', monospace;
+
+    /* Border radius */
+    --radius-base: 0.5rem;
+
+    /* Motion */
+    --duration-fast:   100ms;
+    --duration-normal: 150ms;
+    --duration-slow:   250ms;
+    --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

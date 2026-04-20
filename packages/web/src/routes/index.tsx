@@ -1,34 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useHealthCheck } from "../api/health";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
 function HomePage() {
-  const { data, isLoading, isError } = useHealthCheck();
-
   return (
-    <div className="px-6 py-4">
-      <ApiStatus isLoading={isLoading} isError={isError} db={data?.db} />
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+      <p className="text-muted-foreground">Coming soon.</p>
+      {/* TODO: remove when dashboard is built */}
+      <Link
+        to="/theme"
+        className="inline-block rounded-md bg-surface-raised border border-border px-3 py-1.5 text-xs font-mono text-muted-foreground hover:text-foreground hover:border-ring transition-colors"
+      >
+        debug: theme →
+      </Link>
     </div>
   );
-}
-
-interface ApiStatusProps {
-  isLoading: boolean;
-  isError: boolean;
-  db?: string;
-}
-
-function ApiStatus({ isLoading, isError, db }: ApiStatusProps) {
-  if (isLoading) {
-    return <p className="text-gray-400">Checking API status...</p>;
-  }
-
-  if (isError) {
-    return <p className="text-red-400">🔴 API Down</p>;
-  }
-
-  return <p className="text-green-400">🟢 API Connected, DB: {db}</p>;
 }
