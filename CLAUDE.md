@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Ground rules
 
 - **Never commit or push without explicit user request.** Always wait to be told before running any `git commit` or `git push`.
+- **Shell is bash on Windows.** The working directory is already set to the repo root — never use `cd` to navigate there. Paths like `/mnt/c/...` do not exist; use Windows-style absolute paths (e.g. `C:\Users\...`) only when a tool requires an absolute path. For `pnpm` commands, run them directly from the repo root without a `cd` prefix.
 
 ## Commands
 
