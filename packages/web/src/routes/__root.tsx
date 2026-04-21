@@ -1,10 +1,17 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { Sidebar } from "../components/layout/sidebar";
 
 export const Route = createRootRoute({
-  component: () => (
-    <div className="min-h-screen bg-background text-foreground">
-      <h1 className="p-6 text-2xl font-bold tracking-tight">Finance Manager</h1>
-      <Outlet />
-    </div>
-  ),
+  component: AppShell,
 });
+
+function AppShell() {
+  return (
+    <div className="flex h-screen overflow-hidden bg-background font-sans text-foreground antialiased">
+      <Sidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Outlet />
+      </div>
+    </div>
+  );
+}
