@@ -13,6 +13,7 @@
     "@finance-manager/shared": "workspace:*",
     "@tanstack/react-query": "^5.74.4",
     "@tanstack/react-router": "^1.114.28",
+    "lucide-react": "^1.8.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
