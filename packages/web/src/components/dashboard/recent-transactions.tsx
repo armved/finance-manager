@@ -1,4 +1,5 @@
 import { SlidersHorizontal } from "lucide-react";
+import { getCategoryMeta } from "../../lib/category-meta";
 
 export interface Transaction {
   id: string;
@@ -83,15 +84,17 @@ function TransactionRow({ tx }: { tx: Transaction }) {
 
       {/* Category badge */}
       <td className="px-4 py-4">
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            isIncome
-              ? "bg-income-subtle text-income"
-              : "bg-primary-900 text-primary-300"
-          }`}
-        >
-          {tx.category}
-        </span>
+        {(() => {
+          const { color } = getCategoryMeta(tx.category);
+          return (
+            <span
+              className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+              style={{ backgroundColor: `${color}20`, color }}
+            >
+              {tx.category}
+            </span>
+          );
+        })()}
       </td>
 
       {/* Date */}
