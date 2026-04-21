@@ -137,9 +137,6 @@
 - [x] Run `pnpm drizzle-kit generate` → see SQL migration files appear
 - [x] Run `pnpm drizzle-kit migrate` → tables are created in PostgreSQL
 
-> [!TIP]
-> **Don't fear the schema file.** It's just TypeScript objects describing tables. Drizzle's syntax reads almost like SQL — you'll pick it up instantly with your TS background.
-
 **Win:** Open Docker Desktop → click on the postgres container → open terminal → `psql -U finance finance_manager` → `\dt` → see all your tables listed. Your database is REAL.
 
 ---
@@ -148,9 +145,9 @@
 
 - [x] Create `src/db/index.ts` — export a `db` instance using the Drizzle postgres driver
 - [x] Create `src/db/seed.ts`:
-  - Insert the default currency (USD)
+  - Insert the default currency (EUR)
   - Insert the default account (Main Account)
-  - Insert default category (Uncategorized, type: "any", isDefault: true)
+  - Insert default categories (Uncategorized for `income` and `expense` separately, `isDefault: true`)
   - Make it idempotent (check before insert, so you can run it multiple times)
 - [x] Add a `db:seed` script to `package.json`: `node --env-file=.env --import tsx/esm src/db/seed.ts`
 - [x] Run `pnpm --filter api db:seed` → seed data is inserted
@@ -169,11 +166,10 @@
 
 - [x] In `packages/web/`:
   - Set up TanStack Query provider in `main.tsx` (QueryClient + QueryClientProvider)
-  - Create `src/api/client.ts` — a simple `fetch` wrapper with the base URL (`/api` — relative, no hardcoded host/port; Vite proxy handles dev, Caddy handles prod)
+  - Create `src/api/client.ts` — a typed `apiFetch<T>` wrapper with the base URL (`/api` — relative); throws `ApiError` on non-2xx
   - Create `src/api/health.ts` — a `useHealthCheck()` query hook
   - Proxy API requests in `vite.config.ts` (proxy `/api` → `localhost:3001`) to avoid CORS issues
-- [x] Update the home page to call `useHealthCheck()` and display the result:
-  - Show "🟢 API Connected" or "🔴 API Down"
+- [x] Update the home page to call `useHealthCheck()` and display the result
 
 **Win:** Open the web app → see "🟢 API Connected, DB: connected". **The full stack is wired up.** Frontend → API → Database. This is the foundation. Everything else is building on top of this.
 
@@ -213,14 +209,12 @@
     - `PUT /api/transactions/:id`
     - `DELETE /api/transactions/:id`
 - [ ] Register the routes in `app.ts`
-- [ ] Test manually:
+- [ ] Add Bruno request files in `bruno/transactions/` for each endpoint
+- [ ] Test manually using Bruno:
   - `POST /api/transactions` with `{ "type": "expense", "amount": 42.50, "categoryId": "<uncategorized-uuid>" }`
   - `GET /api/transactions` → see your transaction in the list
 
-> [!TIP]
-> Use the **VS Code REST Client extension** or **Thunder Client** to test API calls without leaving VS Code. Or just use `curl` in the terminal if you prefer.
-
-**Win:** You can create a transaction via API and get it back. The data persists in PostgreSQL. CRUD works.
+**Win:** You can create a transaction via Bruno and get it back. The data persists in PostgreSQL. CRUD works.
 
 ---
 
@@ -228,25 +222,42 @@
 
 > *"The web app has a real layout with sidebar navigation."*
 
-#### Step 5.1 — shadcn/ui setup + app shell (~60 min)
+#### ✅ Step 5.1 — Custom design system + app shell (~60 min)
 
-- [ ] Initialize shadcn/ui in `packages/web/`:
-  - Run the shadcn init CLI
-  - Install the first few components: `button`, `card`, `input`, `separator`, `sheet`
-- [ ] Create the app shell layout:
-  - `src/components/layout/AppShell.tsx` — sidebar + main content area
-  - Sidebar with navigation links (use Lucide icons):
-    - 📊 Dashboard (`/`)
-    - 💸 Transactions (`/transactions`)
-    - 📂 Categories (`/categories`)
-  - Responsive: sidebar collapses to a hamburger menu on mobile
-- [ ] Set up TanStack Router with these routes:
-  - `/` → Dashboard page (placeholder: "Dashboard coming soon")
-  - `/transactions` → Transactions page (placeholder)
-  - `/categories` → Categories page (placeholder)
-- [ ] Style with Tailwind: dark background, clean typography, subtle hover effects on nav items
+> **Note:** This was implemented outside the original plan using a custom CSS design system instead of shadcn/ui. The result looks better and is fully owned.
 
-**Win:** A beautiful app shell with working navigation. Click sidebar links → pages switch. It looks like a real app already.
+- [x] Built a custom CSS design system in `src/styles/`:
+  - `semantic.css` — CSS variables for all semantic color tokens (background, surface, primary, income, expense, etc.)
+  - `themes/dark.css` — dark theme implementation
+  - `bindings.css` — Tailwind utility bindings
+  - `base.css` — typography and resets
+- [x] Created `src/lib/tokens.ts` — design tokens for runtime JS contexts (Recharts, canvas)
+- [x] Created `src/lib/category-meta.ts` — maps category names to icons + colors (10 categories)
+- [x] Created the app shell layout:
+  - `src/components/layout/sidebar.tsx` — collapsible sidebar (w-14 collapsed / w-56 expanded), brand logo, nav links, net worth display
+  - `src/components/layout/top-bar.tsx` — period navigation (month prev/next), "Add Transaction" button
+  - `src/routes/__root.tsx` — root layout composing Sidebar + TopBar + Outlet
+- [x] Set up TanStack Router file-based routing with these routes:
+  - `/` → Dashboard page
+  - `/accounts` → Accounts page (stub)
+  - `/theme` → Theme showcase page
+
+**Win:** A beautiful app shell with collapsible sidebar and period navigation. Dark, polished, custom. It already looks like a real product.
+
+---
+
+### ~~M5.5~~ Dashboard UI Shell (done early, wired to static data)
+
+> *"The dashboard looks complete — but runs on hardcoded numbers. Wiring it to real API data happens in M8."*
+
+#### ✅ Step — Dashboard components with static data
+
+- [x] Created `src/components/dashboard/summary-cards.tsx` — three cards: Total Income, Total Expenses, Net Cash Flow with vs-last-month percentage
+- [x] Created `src/components/dashboard/expenses-by-category.tsx` — CSS conic-gradient donut chart + 5-column category grid with icons and amounts
+- [x] Created `src/components/dashboard/recent-transactions.tsx` — table with merchant avatar, category badge, date, color-coded amount
+- [x] Wired into `src/routes/index.tsx` (the `/` route) with hardcoded placeholder data
+
+**Win:** The dashboard is visually complete and satisfying. All the hard UI work is done. It just needs real data.
 
 ---
 
@@ -256,23 +267,22 @@
 
 #### Step 6.1 — Transaction list page (~60–90 min)
 
-- [ ] Create TanStack Query hooks:
-  - `src/api/transactions.ts`:
-    - `useTransactions(filters)` — `GET /api/transactions`
-    - `useCreateTransaction()` — `POST /api/transactions` (mutation)
-    - `useUpdateTransaction()` — `PUT /api/transactions/:id` (mutation)
-    - `useDeleteTransaction()` — `DELETE /api/transactions/:id` (mutation)
+- [ ] Create TanStack Query hooks in `src/api/transactions.ts`:
+  - Export `transactionsQueryKey` const
+  - `useTransactions(filters)` — `GET /api/transactions`
+  - `useCreateTransaction()` — `POST /api/transactions` (mutation)
+  - `useUpdateTransaction()` — `PUT /api/transactions/:id` (mutation)
+  - `useDeleteTransaction()` — `DELETE /api/transactions/:id` (mutation)
+- [ ] Add `/transactions` route: `src/routes/transactions.tsx`
+- [ ] Add "Transactions" nav link to the sidebar
 - [ ] Create `src/components/transactions/TransactionList.tsx`:
   - Fetch transactions with `useTransactions()`
-  - Display as a styled list/table:
-    - Each row: date | type (income/expense with color) | amount | category name
-    - Income = green, Expense = red
+  - Display as a styled table (match the design language from `recent-transactions.tsx`):
+    - Each row: date | merchant/description | category badge | amount (green income / red expense)
     - Empty state: "No transactions yet. Add your first one!"
-  - Loading state with skeleton/spinner
-- [ ] Wire up the `/transactions` route to render `TransactionList`
-- [ ] Manually add 3-4 test transactions via API (or via seed script), then refresh the page
+  - Loading skeleton state
 
-**Win:** Open `/transactions` → see your transactions listed with dates, amounts, and color-coded types. **You're looking at real data from your database in a real UI.**
+**Win:** Open `/transactions` → see your transactions listed. **You're looking at real data from your database in a real UI.**
 
 ---
 
@@ -282,29 +292,29 @@
 
 #### Step 7.1 — "Add Transaction" dialog (~60–90 min)
 
-- [ ] Install shadcn components: `dialog`, `select`, `calendar`, `popover`, `label`
-- [ ] Install React Hook Form + connect with Zod schemas from `@finance-manager/shared`
-- [ ] Create `src/components/transactions/AddTransactionDialog.tsx`:
-  - A dialog/modal triggered by a "➕ Add Transaction" button
+- [ ] Install: `react-hook-form`, connect with Zod schemas from `@finance-manager/shared`
+- [ ] Build a modal/dialog using CSS (or a headless Radix `Dialog` — `pnpm add @radix-ui/react-dialog`)
+- [ ] Create `src/components/transactions/TransactionDialog.tsx`:
+  - Triggered by the "Add Transaction" button in `top-bar.tsx` (already exists — just wire it up)
   - Form fields:
-    - **Type**: toggle/select — Income or Expense (default: Expense)
+    - **Type**: toggle — Income or Expense (default: Expense)
     - **Amount**: number input (required)
-    - **Date**: date picker (defaults to today — user sees today's date pre-filled)
-    - **Category**: dropdown select (for now, just fetches flat category list from API)
+    - **Date**: date input, type="date" (defaults to today)
+    - **Category**: `<select>` fetching categories from `GET /api/categories` (add that endpoint first — see note below)
   - On submit: call `useCreateTransaction()` mutation
-  - On success: close dialog, list refreshes automatically (TanStack Query invalidation)
-- [ ] Add the "➕ Add Transaction" button to the transactions page (top-right, prominent)
+  - On success: close dialog, invalidate `transactionsQueryKey`
+- [ ] Add a minimal `GET /api/categories` endpoint (flat list, no hierarchy needed yet) so the form has categories to pick from
 
-**Win:** Click "Add Transaction" → fill in the form → submit → dialog closes → the new transaction appears in the list instantly. **This is the core loop of the entire app. You just built it.** 🎉
+**Win:** Click "Add Transaction" → fill in the form → submit → dialog closes → transaction appears in the list instantly. **This is the core loop of the entire app. You just built it.** 🎉
 
 ---
 
 #### Step 7.2 — Edit & Delete transactions (~45–60 min)
 
-- [ ] Click a transaction row → opens the same form dialog, pre-filled with existing data
-- [ ] Add an "Edit" mode to the dialog that calls `useUpdateTransaction()`
-- [ ] Add a "Delete" button (with confirmation) that calls `useDeleteTransaction()`
-- [ ] On success: list refreshes, toast notification or subtle animation
+- [ ] Click a transaction row → opens the same dialog pre-filled with existing data
+- [ ] Add "Edit" mode to `TransactionDialog` — calls `useUpdateTransaction()`
+- [ ] Add a "Delete" button (with confirmation) — calls `useDeleteTransaction()`
+- [ ] On success: list refreshes, brief visual feedback (e.g. row flash or count update)
 
 **Win:** Full CRUD from the UI. Add, edit, delete — all from the browser. You never need to touch the API directly again.
 
@@ -321,39 +331,40 @@
 
 - [ ] Create `src/modules/analytics/`:
   - `analytics.repository.ts`:
-    - `getBreakdownByCategory(startDate, endDate)` — `GROUP BY category_id`, returns `{ categoryName, total, type }`
+    - `getBreakdownByCategory(startDate, endDate)` — `GROUP BY category_id`, returns `{ categoryId, categoryName, total, type }`
     - `getSummary(startDate, endDate)` — returns `{ totalIncome, totalExpenses, net }`
   - `analytics.routes.ts`:
     - `GET /api/analytics/breakdown?start=2026-04-01&end=2026-04-30`
     - `GET /api/analytics/summary?start=2026-04-01&end=2026-04-30`
-- [ ] Test: add a few transactions via the UI, then hit the analytics endpoints
+- [ ] Register routes in `app.ts`
+- [ ] Add Bruno request files in `bruno/analytics/`
+- [ ] Test: add a few transactions via the UI, then hit the analytics endpoints in Bruno
 
 **Win:** The API returns your spending summary. Real numbers from real data you entered.
 
 ---
 
-#### Step 8.2 — Dashboard UI with charts (~60–90 min)
+#### Step 8.2 — Wire dashboard to real data (~45–60 min)
 
-- [ ] Install `recharts`
-- [ ] Create query hooks:
+> **Note:** The dashboard UI is already built (summary cards, donut chart, recent transactions table). This step replaces the hardcoded placeholder data with real API calls.
+
+- [ ] Create `src/api/analytics.ts`:
+  - Export `analyticsBreakdownQueryKey`, `analyticsSummaryQueryKey`
   - `useAnalyticsBreakdown(startDate, endDate)`
   - `useAnalyticsSummary(startDate, endDate)`
-- [ ] Build the Dashboard page (`/`):
-  - **Top row: Summary cards** (3 cards):
-    - 💰 Total Income (green)
-    - 💸 Total Expenses (red)
-    - 📊 Net (green if positive, red if negative)
-  - **Pie chart**: Expense breakdown by category (Recharts PieChart)
-  - **Month selector**: prev/next month buttons, defaults to current month
-  - Style: use shadcn `Card` components, clean grid layout
-- [ ] If no data: show friendly empty state — "No transactions this month. Start tracking!"
+- [ ] Create `src/api/transactions.ts` if not done in M6 (or reuse) — need recent transactions
+- [ ] Update `src/routes/index.tsx`:
+  - Read selected month from TopBar's period state (use Zustand or URL params)
+  - Pass date range (start/end of month) to the hooks
+  - Feed real data into `<SummaryCards>`, `<ExpensesByCategory>`, `<RecentTransactions>`
+- [ ] Handle loading state (skeleton) and empty state ("No transactions this month. Start tracking!")
 
-**Win:** Open the dashboard → see your monthly income, expenses, net balance, and a pie chart of where your money went. **The app is now genuinely useful.** You can track your finances. This is the moment.
+**Win:** Open the dashboard → see your actual monthly income, expenses, net balance, and real category breakdown. **The app is now genuinely useful.** You can track your finances. This is the moment.
 
 ---
 
 > [!IMPORTANT]
-> **🎉 ACT 2 COMPLETE.** You have a fully functional personal finance tracker. You can add income/expenses, see them in a list, and view monthly statistics with charts. **If you stop here, you still have a useful app.** Everything after this is enhancement.
+> **🎉 ACT 2 COMPLETE.** You have a fully functional personal finance tracker. You can add income/expenses, see them in a list, and view monthly statistics. **If you stop here, you still have a useful app.** Everything after this is enhancement.
 
 ---
 
@@ -371,27 +382,29 @@
 
 #### Step 9.1 — Category CRUD API (~45 min)
 
-- [ ] Create `src/modules/categories/`:
+- [ ] Expand `src/modules/categories/` (stub already exists from M7 step 7.1):
   - `category.repository.ts`:
-    - `findAll()` — return flat list for now (hierarchy comes later)
-    - `create(data)` — name, type (income/expense/any), icon, color
+    - `findAll()` — return flat list
+    - `create(data)` — name, type (income/expense), icon, color
     - `update(id, data)`
     - `delete(id, reassignToCategoryId)` — reassign transactions, then delete
-  - `category.routes.ts` — standard CRUD endpoints
-- [ ] Protect the default "Uncategorized" category from deletion
+  - `category.routes.ts` — full CRUD endpoints
+- [ ] Protect the default "Uncategorized" categories from deletion (check `isDefault` flag)
+- [ ] Add Bruno request files in `bruno/categories/`
 
-**Win:** Category CRUD works via API. Default category can't be deleted.
+**Win:** Category CRUD works via API. Default categories can't be deleted.
 
 ---
 
 #### Step 9.2 — Category management page (~60 min)
 
-- [ ] Create `/categories` page:
+- [ ] Add "Categories" nav link to the sidebar
+- [ ] Create `/categories` route: `src/routes/categories.tsx`:
   - List of categories with name, type badge, color swatch, icon
   - "Add Category" button → dialog with form (name, type selector, color picker, icon picker)
   - Edit button on each category → same dialog, pre-filled
   - Delete button → confirmation dialog that asks "Reassign transactions to:" with category dropdown
-- [ ] Update the transaction form's category dropdown to show user-created categories
+- [ ] Update the transaction form's category `<select>` to show user-created categories (already backed by `GET /api/categories`)
 
 **Win:** Create categories like "Groceries", "Salary", "Entertainment" → they appear in the transaction form dropdown.
 
@@ -428,7 +441,6 @@
 - [ ] Create `src/components/categories/CategoryTree.tsx`:
   - Collapsible tree view with indentation
   - Click arrow to expand/collapse children
-  - Drag-and-drop to re-parent (optional — skip if it feels like too much)
   - "Add subcategory" option on each category's context menu
 - [ ] Update the transaction form's category selector:
   - Show as a tree dropdown (indented names, e.g., `Food > Groceries`)
@@ -448,7 +460,7 @@
 - [ ] Create `src/modules/tags/`:
   - CRUD + search endpoint
 - [ ] Update transaction create/update to accept `merchantId` and `tagIds`
-- [ ] Update transaction list to include merchant name and tag names in response
+- [ ] Update transaction list response to include merchant name and tag names
 
 **Win:** Transactions can now carry merchant and tag data.
 
@@ -456,13 +468,12 @@
 
 #### Step 11.2 — Autocomplete UI in transaction form (~60 min)
 
-- [ ] Install shadcn `command` (combobox) component
-- [ ] Add to the "Add Transaction" dialog:
-  - **Merchant**: combobox with search — type to search existing merchants, option to create new inline
-  - **Tags**: multi-select combobox — search and select multiple tags, create new inline
-- [ ] Update transaction list to show merchant name and tag badges
+- [ ] Add to `TransactionDialog`:
+  - **Merchant**: text input with autocomplete — type to search existing merchants, create new inline
+  - **Tags**: multi-select — search and select multiple tags, create new inline
+- [ ] Update `TransactionList` to show merchant name and tag badges on each row
 
-**Win:** When adding a transaction, you can type "Amazon" → select or create the merchant → add tags like "electronics", "personal". Feels professional.
+**Win:** When adding a transaction, type "Amazon" → select or create the merchant → add tags like "electronics", "personal". Feels professional.
 
 ---
 
@@ -473,17 +484,14 @@
 #### Step 12.1 — Transaction filters UI (~60–90 min)
 
 - [ ] Add a filter bar above the transaction list:
-  - Date range picker (start date – end date)
-  - Category dropdown (from tree)
+  - Date range picker (start date – end date, using `<input type="date">`)
+  - Category dropdown
   - Type filter (All / Income / Expense)
-  - Merchant dropdown
-  - Tag multi-select
-- [ ] Filters update URL query params (TanStack Router) → page is shareable/bookmarkable
+- [ ] Filters update URL search params (TanStack Router) → page is shareable/bookmarkable
 - [ ] Filters are passed to `useTransactions()` → API filters the results
-- [ ] Add pagination (or infinite scroll) if the list gets long
-- [ ] Show active filter count badge
+- [ ] Show active filter count badge on a "Filters" button
 
-**Win:** Filter your transactions by any dimension. "Show me all expenses at Amazon in March" — done.
+**Win:** Filter your transactions by any dimension. "Show me all expenses in March" — done.
 
 ---
 
@@ -493,9 +501,9 @@
 
 #### Step 13.1 — UX Polish (~60 min)
 
-- [ ] **Toast notifications**: success/error feedback on all mutations (use shadcn `sonner` or `toast`)
-- [ ] **Loading states**: skeleton loaders on lists and charts
-- [ ] **Empty states**: friendly illustrations/messages when no data exists
+- [ ] **Toast notifications**: build a simple toast system (or use `sonner` — `pnpm add sonner`) for success/error feedback on all mutations
+- [ ] **Loading states**: skeleton loaders on lists and dashboard cards
+- [ ] **Empty states**: friendly messages when no data exists (already partially done on dashboard)
 - [ ] **Error boundaries**: catch and display API errors gracefully
 - [ ] **Responsive design**: test on mobile viewport, ensure sidebar collapses, forms are usable on small screens
 
@@ -555,11 +563,13 @@ Can't decide what to do today? Use this:
 
 | I have... | Do this | Milestone |
 |-----------|---------|-----------|
-| 30 min | Step 1.1 (install tools) or Step 8.1 (analytics API) | M1 / M8 |
-| 45 min | Step 2.2 (seed data) or Step 9.1 (category API) | M2 / M9 |
-| 60 min | Step 4.1 (transaction API) or Step 6.1 (transaction list) | M4 / M6 |
-| 90 min | Step 7.1 (add transaction form) or Step 8.2 (dashboard charts) | M7 / M8 |
+| 30 min | Step 8.1 (analytics API) or Step 9.1 (category API) | M8 / M9 |
+| 45 min | Step 4.1 (transaction API) or Step 7.2 (edit & delete) | M4 / M7 |
+| 60 min | Step 6.1 (transaction list UI) or Step 8.2 (wire dashboard) | M6 / M8 |
+| 90 min | Step 7.1 (add transaction form) — the core loop | M7 |
 | Feeling lazy | Step 13.1 — add toasts and loading states (polish is easy dopamine) | M13 |
+
+**Where you are right now:** M4 is next. Start there.
 
 ---
 
