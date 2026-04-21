@@ -97,6 +97,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ThemeShowcase() {
   return (
+    <div className="flex-1 overflow-y-auto">
     <div className="space-y-10 px-8 py-8 max-w-4xl">
       <div>
         <h1 className="text-xl font-semibold text-foreground">Theme</h1>
@@ -165,6 +166,7 @@ function ThemeShowcase() {
           ))}
         </div>
       </Section>
+    </div>
     </div>
   );
 }
