@@ -4,6 +4,7 @@ import sensible from "@fastify/sensible";
 import { config, isDev } from "./config";
 import { dbPlugin } from "./plugins/db";
 import { healthRoutes } from "./routes/health";
+import { transactionRoutes } from "./modules/transactions/transaction.routes";
 
 export async function buildApp() {
   const app = Fastify({
@@ -31,6 +32,7 @@ export async function buildApp() {
   // ── Routes ─────────────────────────────────────────────────────────────────
 
   await app.register(healthRoutes);
+  await app.register(transactionRoutes);
 
   return app;
 }

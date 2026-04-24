@@ -1,0 +1,22 @@
+meta {
+  name: Update Transaction
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/transactions/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: YOUR_TRANSACTION_ID
+}
+
+body:json {
+  {
+    "amount": 55.00,
+    "transactionDate": "2026-04-20"
+  }
+}

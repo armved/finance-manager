@@ -1,0 +1,19 @@
+meta {
+  name: Create Transaction
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/transactions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "type": "expense",
+    "amount": 42.50,
+    "categoryId": "PASTE_UNCATEGORIZED_EXPENSE_CATEGORY_ID"
+  }
+}

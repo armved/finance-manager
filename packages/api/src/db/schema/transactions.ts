@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { pgTable, uuid, decimal, date, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import { transactionTypeEnum } from "./enums";
 import { accounts } from "./accounts";
@@ -35,3 +36,31 @@ export const transactionTags = pgTable(
   },
   (table) => [primaryKey({ columns: [table.transactionId, table.tagId] })],
 );
+
+// Relations — unlock `db.query.transactions.findMany({ with: { ... } })`.
+export const transactionsRelations = relations(transactions, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [transactions.categoryId],
+    references: [categories.id],
+  }),
+  account: one(accounts, {
+    fields: [transactions.accountId],
+    references: [accounts.id],
+  }),
+  merchant: one(merchants, {
+    fields: [transactions.merchantId],
+    references: [merchants.id],
+  }),
+  transactionTags: many(transactionTags),
+}));
+
+export const transactionTagsRelations = relations(transactionTags, ({ one }) => ({
+  transaction: one(transactions, {
+    fields: [transactionTags.transactionId],
+    references: [transactions.id],
+  }),
+  tag: one(tags, {
+    fields: [transactionTags.tagId],
+    references: [tags.id],
+  }),
+}));
