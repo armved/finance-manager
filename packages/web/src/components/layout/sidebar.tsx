@@ -9,6 +9,7 @@ import {
   ChevronsUpDown,
   LayoutDashboard,
   Palette,
+  Receipt,
   Wallet,
 } from "lucide-react";
 
@@ -52,6 +53,12 @@ export function Sidebar() {
           icon={<LayoutDashboard className="h-4 w-4" />}
           label="Dashboard"
           exact
+          collapsed={collapsed}
+        />
+        <NavLink
+          to="/transactions"
+          icon={<Receipt className="h-4 w-4" />}
+          label="Transactions"
           collapsed={collapsed}
         />
         <NavLink
