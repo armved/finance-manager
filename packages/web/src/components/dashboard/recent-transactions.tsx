@@ -3,7 +3,7 @@ import { getCategoryMeta } from "../../lib/category-meta";
 
 export interface Transaction {
   id: string;
-  merchant: string;
+  merchant?: string;
   category: string;
   date: string;
   amount: number;
@@ -17,24 +17,17 @@ export interface RecentTransactionsProps {
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <h2 className="text-sm font-semibold text-foreground">
-          Transactions
-        </h2>
+        <h2 className="text-sm font-semibold text-foreground">Transactions</h2>
         <button className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground">
           <SlidersHorizontal className="h-4 w-4" />
         </button>
       </div>
 
-      {/* Table */}
       <table className="w-full">
         <thead>
           <tr className="border-b border-border">
             <th className="px-6 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Transaction
-            </th>
-            <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Category
             </th>
             <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -56,56 +49,30 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
 }
 
 function TransactionRow({ tx }: { tx: Transaction }) {
-  const initials = tx.merchant
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-
+  const { icon: Icon, color } = getCategoryMeta(tx.category);
   const isIncome = tx.type === "income";
-  const formattedAmount = `${isIncome ? "+" : "-"}€${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+  const formattedAmount = `${isIncome ? "+" : "-"}€${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <tr className="border-b border-border transition-colors last:border-0 hover:bg-surface-raised">
-      {/* Merchant */}
-      <td className="px-6 py-4">
+      <td className="px-6 py-3">
         <div className="flex items-center gap-3">
           <div
-            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-[10px] font-bold ${
-              isIncome ? "bg-income-subtle text-income" : "bg-expense-subtle text-expense"
-            }`}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
+            style={{ backgroundColor: `${color}20`, color }}
           >
-            {initials}
+            <Icon className="h-[18px] w-[18px]" />
           </div>
-          <span className="text-sm font-medium text-foreground">{tx.merchant}</span>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-sm font-semibold leading-tight text-foreground">{tx.category}</span>
+            {tx.merchant && (
+              <span className="truncate text-xs leading-tight text-muted-foreground">{tx.merchant}</span>
+            )}
+          </div>
         </div>
       </td>
-
-      {/* Category badge */}
-      <td className="px-4 py-4">
-        {(() => {
-          const { color } = getCategoryMeta(tx.category);
-          return (
-            <span
-              className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-              style={{ backgroundColor: `${color}20`, color }}
-            >
-              {tx.category}
-            </span>
-          );
-        })()}
-      </td>
-
-      {/* Date */}
-      <td className="px-4 py-4 text-sm text-muted-foreground">{tx.date}</td>
-
-      {/* Amount */}
-      <td
-        className={`px-6 py-4 text-right text-sm font-semibold ${
-          isIncome ? "text-income" : "text-expense"
-        }`}
-      >
+      <td className="px-4 py-3 text-sm text-muted-foreground">{tx.date}</td>
+      <td className={`px-6 py-3 text-right font-mono text-sm font-semibold ${isIncome ? "text-income" : "text-expense"}`}>
         {formattedAmount}
       </td>
     </tr>

@@ -1,4 +1,5 @@
 import { useTransactions } from "../../api/transactions";
+import { getCategoryMeta } from "../../lib/category-meta";
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
@@ -16,39 +17,38 @@ function formatAmount(amount: number, type: "income" | "expense"): string {
   return `${type === "income" ? "+" : "-"}€${formatted}`;
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
-
 function SkeletonRow() {
   return (
     <tr className="border-b border-border last:border-0">
-      <td className="px-6 py-4">
+      <td className="px-6 py-3">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 animate-pulse rounded-lg bg-surface-raised" />
-          <div className="h-4 w-32 animate-pulse rounded bg-surface-raised" />
+          <div className="h-9 w-9 animate-pulse rounded-[10px] bg-surface-raised" />
+          <div className="flex flex-col gap-1">
+            <div className="h-4 w-28 animate-pulse rounded bg-surface-raised" />
+            <div className="h-3 w-20 animate-pulse rounded bg-surface-raised" />
+          </div>
         </div>
       </td>
-      <td className="px-4 py-4">
-        <div className="h-5 w-24 animate-pulse rounded-full bg-surface-raised" />
-      </td>
-      <td className="px-4 py-4">
+      <td className="px-4 py-3">
         <div className="h-4 w-20 animate-pulse rounded bg-surface-raised" />
       </td>
-      <td className="px-6 py-4 text-right">
+      <td className="px-6 py-3 text-right">
         <div className="ml-auto h-4 w-16 animate-pulse rounded bg-surface-raised" />
       </td>
     </tr>
   );
 }
 
-export function TransactionList() {
-  const { data, isPending, error } = useTransactions();
+interface TransactionListProps {
+  typeFilter?: "all" | "income" | "expense";
+}
+
+export function TransactionList({ typeFilter = "all" }: TransactionListProps) {
+  const { data, isPending, error } = useTransactions(
+    typeFilter !== "all" ? { type: typeFilter } : undefined,
+  );
+
+  const rows = data?.data;
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
@@ -56,7 +56,7 @@ export function TransactionList() {
         <h2 className="text-sm font-semibold text-foreground">All Transactions</h2>
         {data && (
           <span className="text-xs text-muted-foreground">
-            {data.total} total
+            {rows?.length ?? data.total} total
           </span>
         )}
       </div>
@@ -70,9 +70,6 @@ export function TransactionList() {
           <thead>
             <tr className="border-b border-border">
               <th className="px-6 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Description
-              </th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Category
               </th>
               <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -86,57 +83,49 @@ export function TransactionList() {
           <tbody>
             {isPending ? (
               Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-            ) : data?.data.length === 0 ? (
+            ) : rows?.length === 0 ? (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={3}
                   className="px-6 py-12 text-center text-sm text-muted-foreground"
                 >
                   No transactions yet. Add your first one!
                 </td>
               </tr>
             ) : (
-              data?.data.map((tx) => {
+              rows?.map((tx) => {
                 const name = tx.merchant?.name ?? "Transaction";
-                const color = tx.category.color ?? "#6B7280";
+                const { icon: Icon, color } = getCategoryMeta(tx.category.name);
+                const categoryColor = tx.category.color ?? color;
                 const isIncome = tx.type === "income";
                 return (
                   <tr
                     key={tx.id}
                     className="border-b border-border transition-colors last:border-0 hover:bg-surface-raised"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-[10px] font-bold ${
-                            isIncome
-                              ? "bg-income-subtle text-income"
-                              : "bg-expense-subtle text-expense"
-                          }`}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
+                          style={{ backgroundColor: `${categoryColor}20`, color: categoryColor }}
                         >
-                          {getInitials(name)}
+                          <Icon className="h-[18px] w-[18px]" />
                         </div>
-                        <span className="text-sm font-medium text-foreground">
-                          {name}
-                        </span>
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span className="text-sm font-semibold leading-tight text-foreground">
+                            {tx.category.name}
+                          </span>
+                          <span className="truncate text-xs leading-tight text-muted-foreground">
+                            {name}
+                          </span>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4">
-                      <span
-                        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                        style={{
-                          backgroundColor: `${color}20`,
-                          color,
-                        }}
-                      >
-                        {tx.category.name}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
                       {formatDate(tx.transactionDate)}
                     </td>
                     <td
-                      className={`px-6 py-4 text-right text-sm font-semibold ${
+                      className={`px-6 py-3 text-right font-mono text-sm font-semibold ${
                         isIncome ? "text-income" : "text-expense"
                       }`}
                     >

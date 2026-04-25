@@ -34,9 +34,9 @@ export function SummaryCards({
             <TrendingUp className="h-5 w-5 text-income" />
           </div>
         </div>
-        <p className="mt-2 text-2xl font-bold text-foreground">{fmt(totalIncome)}</p>
+        <p className="mt-2 font-mono text-2xl font-bold tracking-tight text-foreground">{fmt(totalIncome)}</p>
         <div className="mt-2 flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-income">
+          <span className="font-mono text-xs font-semibold text-income">
             {sign(incomeChangePercent)}{incomeChangePercent}%
           </span>
           <span className="text-xs text-muted-foreground">vs last month</span>
@@ -53,9 +53,9 @@ export function SummaryCards({
             <TrendingDown className="h-5 w-5 text-expense" />
           </div>
         </div>
-        <p className="mt-2 text-2xl font-bold text-foreground">{fmt(totalExpenses)}</p>
+        <p className="mt-2 font-mono text-2xl font-bold tracking-tight text-foreground">{fmt(totalExpenses)}</p>
         <div className="mt-2 flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-expense">
+          <span className="font-mono text-xs font-semibold text-expense">
             {sign(expensesChangePercent)}{expensesChangePercent}%
           </span>
           <span className="text-xs text-muted-foreground">vs last month</span>
@@ -72,9 +72,9 @@ export function SummaryCards({
             <Landmark className={`h-5 w-5 ${netCashFlow >= 0 ? "text-income" : "text-expense"}`} />
           </div>
         </div>
-        <p className={`mt-2 text-2xl font-bold ${netCashFlow >= 0 ? "text-income" : "text-expense"}`}>{fmt(netCashFlow)}</p>
+        <p className={`mt-2 font-mono text-2xl font-bold tracking-tight ${netCashFlow >= 0 ? "text-income" : "text-expense"}`}>{fmt(netCashFlow)}</p>
         <div className="mt-2 flex items-center gap-1.5">
-          <span className={`text-xs font-semibold ${netCashFlowChangePercent >= 0 ? "text-income" : "text-expense"}`}>
+          <span className={`font-mono text-xs font-semibold ${netCashFlowChangePercent >= 0 ? "text-income" : "text-expense"}`}>
             {sign(netCashFlowChangePercent)}{netCashFlowChangePercent}%
           </span>
           <span className="text-xs text-muted-foreground">vs last month</span>

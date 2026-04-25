@@ -18,7 +18,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`flex ${collapsed ? "w-14" : "w-56"} shrink-0 flex-col overflow-hidden border-r border-border bg-surface transition-[width] duration-200 ease-in-out`}
+      className={`flex h-screen ${collapsed ? "w-14" : "w-56"} shrink-0 flex-col overflow-hidden border-r border-border bg-surface transition-[width] duration-200 ease-in-out`}
     >
       {/* Brand */}
       <div className={`flex items-center py-4 ${collapsed ? "justify-center px-0" : "justify-between px-4"}`}>
@@ -30,8 +30,9 @@ export function Sidebar() {
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary">
             <Banknote className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="whitespace-nowrap text-[10px] font-bold uppercase leading-tight tracking-widest text-primary">
-            Finance Manager
+          <span className="inline-flex h-7 items-center whitespace-nowrap text-sm font-bold leading-none tracking-tight">
+            <span className="text-foreground">Finance</span>
+            <span className="ml-[3px] font-medium text-muted-foreground">Manager</span>
           </span>
         </div>
         <button

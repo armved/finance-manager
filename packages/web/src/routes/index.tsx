@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PageContainer } from "../components/layout/page-container";
 import { TopBar } from "../components/layout/top-bar";
 import { ExpensesByCategory } from "../components/dashboard/expenses-by-category";
 import { RecentTransactions } from "../components/dashboard/recent-transactions";
@@ -68,14 +69,16 @@ function DashboardPage() {
   return (
     <>
       <TopBar />
-      <main className="flex-1 space-y-5 overflow-y-auto p-6">
-        <SummaryCards {...SUMMARY} />
-        <ExpensesByCategory
-          total={SUMMARY.totalExpenses}
-          categories={CATEGORY_AMOUNTS}
-        />
-        <RecentTransactions transactions={TRANSACTIONS} />
-      </main>
+      <PageContainer>
+        <div className="space-y-5">
+          <SummaryCards {...SUMMARY} />
+          <ExpensesByCategory
+            total={SUMMARY.totalExpenses}
+            categories={CATEGORY_AMOUNTS}
+          />
+          <RecentTransactions transactions={TRANSACTIONS} />
+        </div>
+      </PageContainer>
     </>
   );
 }
