@@ -194,7 +194,7 @@
 
 #### Step 4.1 — Transaction CRUD endpoints (~60 min)
 
-- [ ] Create `src/modules/transactions/`:
+- [x] Create `src/modules/transactions/`:
   - `transaction.repository.ts` — database queries:
     - `findAll(filters)` — with optional date range, category, type filters + pagination (limit/offset)
     - `findById(id)`
@@ -208,9 +208,9 @@
     - `POST /api/transactions`
     - `PUT /api/transactions/:id`
     - `DELETE /api/transactions/:id`
-- [ ] Register the routes in `app.ts`
-- [ ] Add Bruno request files in `bruno/transactions/` for each endpoint
-- [ ] Test manually using Bruno:
+- [x] Register the routes in `app.ts`
+- [x] Add Bruno request files in `bruno/transactions/` for each endpoint
+- [x] Test manually using Bruno:
   - `POST /api/transactions` with `{ "type": "expense", "amount": 42.50, "categoryId": "<uncategorized-uuid>" }`
   - `GET /api/transactions` → see your transaction in the list
 
@@ -354,7 +354,7 @@
   - `useAnalyticsSummary(startDate, endDate)`
 - [ ] Create `src/api/transactions.ts` if not done in M6 (or reuse) — need recent transactions
 - [ ] Update `src/routes/index.tsx`:
-  - Read selected month from TopBar's period state (use Zustand or URL params)
+  - Read selected month from TopBar's period state via **TanStack Router search params** (URL-based — shareable, bookmarkable, browser back/forward works for free)
   - Pass date range (start/end of month) to the hooks
   - Feed real data into `<SummaryCards>`, `<ExpensesByCategory>`, `<RecentTransactions>`
 - [ ] Handle loading state (skeleton) and empty state ("No transactions this month. Start tracking!")

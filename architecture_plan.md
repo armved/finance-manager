@@ -29,7 +29,7 @@ A **personal finance tracking application** for a single user, deployed on a Ras
 | **Build Tool** | **Vite** | Fast, modern, industry-standard for React |
 | **Routing** | **TanStack Router** | Type-safe routing, gaining massive adoption, more modern than React Router — a great skill to learn |
 | **Server State** | **TanStack Query (React Query)** | De-facto standard for data fetching/caching in React — essential for any React role |
-| **Client State** | **Zustand** | Lightweight, elegant API, very popular — a refreshing alternative to Redux boilerplate |
+| **Client State** | **Zustand** | Lightweight, elegant API, very popular — a refreshing alternative to Redux boilerplate. Used for true client-only state (e.g. sidebar collapsed). UI view state that benefits from shareability (e.g. selected month/period) lives in TanStack Router **search params** instead |
 | **UI Components** | **shadcn/ui** (built on **Radix UI**) | Not a library — copy-paste components you own. Extremely trendy, teaches accessible component patterns |
 | **Styling** | **Tailwind CSS v4** | Dominant in the React ecosystem, highly employable. Pairs perfectly with shadcn/ui |
 | **Charts** | **Recharts** | React-native charting, simple API, well-maintained, built on D3 |
@@ -171,11 +171,11 @@ erDiagram
         uuid id PK
         varchar name "Uncategorized"
         uuid parent_id FK "nullable, self-ref for infinite hierarchy"
-        varchar type "expense | income | any"
+        varchar type "expense | income"
         int sort_order
         varchar icon "nullable"
         varchar color "nullable"
-        boolean is_default "only one true - the seed category"
+        boolean is_default "one true per type — seed: Uncategorized (income) + Uncategorized (expense)"
         timestamp created_at
         timestamp updated_at
     }
@@ -232,8 +232,8 @@ erDiagram
 | **No `attachment` field** | Stakeholder confirmed these are not needed |
 | **`merchant_id` is nullable** | Merchant is optional — user assigns it when they know the merchant |
 | **Transfer = 2 linked transactions** | A transfer creates an expense on the source account and an income on the destination, linked via the `transfer` table. Account balances are always computable from transactions alone — no separate "transfer" type pollutes aggregation queries |
-| **Category `type` field** | Categories can be restricted to `expense`, `income`, or `any` — prevents accidentally filing income under "Groceries" |
-| **Category `is_default` flag** | Exactly one category is the default (seed data: "Uncategorized"). Shown to the user as a hint to create their own categories |
+| **Category `type` field** | Categories are restricted to `expense` or `income` — prevents accidentally filing income under "Groceries". The UI filters the category dropdown to only show categories matching the selected transaction type; the API enforces the same rule as a hard constraint (defense in depth) |
+| **Category `is_default` flag** | Exactly one default category exists **per type** (seed: "Uncategorized" for `income` and "Uncategorized" for `expense`). Default categories cannot be deleted |
 | **`parent_id` self-reference** | Enables **infinite hierarchy depth**. A category with `parent_id = NULL` is a root category |
 | **Merchant as separate entity** | Enables "how much did I spend at AliExpress" queries without string-matching free text |
 | **Tags via junction table** | Many-to-many: one transaction can have multiple tags (e.g., "vacation" + "food"), one tag applies to many transactions. Enables cross-category analysis like "total vacation spending" |
@@ -244,9 +244,10 @@ erDiagram
 
 | Entity | Default Value |
 |---|---|
-| Currency | `{ code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2 }` |
-| Account | `{ name: 'Main Account', currencyCode: 'USD', initialBalance: 0 }` |
-| Category | `{ name: 'Uncategorized', type: 'any', isDefault: true, parentId: null }` |
+| Currency | `{ code: 'EUR', name: 'Euro', symbol: '€', decimalPlaces: 2 }` |
+| Account | `{ name: 'Main Account', currencyCode: 'EUR', initialBalance: 0 }` |
+| Category | `{ name: 'Uncategorized', type: 'income', isDefault: true, parentId: null }` |
+| Category | `{ name: 'Uncategorized', type: 'expense', isDefault: true, parentId: null }` |
 
 ---
 
@@ -255,11 +256,10 @@ erDiagram
 ### Transactions
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/transactions` | List with filters (date range, category, merchant, tags, account, type) + pagination |
+| `GET` | `/api/transactions` | List with filters (date range, category, merchant, tagId, account, type) + pagination. `tagId` is singular — filter by one tag at a time |
 | `GET` | `/api/transactions/:id` | Get single transaction with related merchant & tags |
-| `POST` | `/api/transactions` | Create single transaction. `transactionDate` defaults to today if omitted |
-| `POST` | `/api/transactions/bulk` | Create multiple transactions at once |
-| `PUT` | `/api/transactions/:id` | Update transaction (amount, category, merchant, tags, date, type) |
+| `POST` | `/api/transactions` | Create single transaction. `transactionDate` defaults to today if omitted. `accountId` is optional — defaults to the first active account |
+| `PUT` | `/api/transactions/:id` | Update transaction (amount, category, merchant, tags, date, type). `accountId` is intentionally excluded — moving a transaction to a different account is not supported in v1 |
 | `DELETE` | `/api/transactions/:id` | Delete transaction |
 
 ### Categories
@@ -367,8 +367,9 @@ The active provider is selected via environment variable (`AI_PROVIDER=openai|go
 
 ### ❌ Out of Scope (v2+)
 - AI image parsing (interface defined, not implemented)
-- Bulk transaction import
+- Bulk transaction creation (`POST /api/transactions/bulk` — intended for AI-generated batch payloads)
 - Multi-account & multi-currency UI
+- Moving a transaction to a different account after creation
 - Transfers between accounts (modeled in schema, no UI yet)
 - Advanced analytics (trends, forecasting, anomaly detection, budgets)
 - Mobile companion app
