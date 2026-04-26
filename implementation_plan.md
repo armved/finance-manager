@@ -20,8 +20,8 @@
 | Act | Milestones | Goal | Sessions |
 |-----|-----------|------|----------|
 | **Act 1: Get It Running** | M1 → M3 | Empty repo → API + Web + Database all talking to each other | ~4 sessions |
-| **Act 2: Make It Usable** | M4 → M8 | Add transactions, see them, categorize them, view stats | ~8 sessions |
-| **Act 3: Make It Good** | M9 → M13 | Merchants, tags, category trees, polish, deploy to Pi | ~8 sessions |
+| **Act 2: Make It Usable** | M4 → M10 | Add transactions, categorize, view stats, manage accounts | ~10 sessions |
+| **Act 3: Make It Good** | M11 → M15 | Merchants, tags, category trees, polish, deploy to Pi | ~9 sessions |
 
 > [!IMPORTANT]
 > **Your "I won't quit" milestone is at the end of Act 2 (M8).** After that, you have a working personal finance tracker with monthly stats. Everything in Act 3 is bonus. Optimize for reaching M8 as fast as possible.
@@ -347,11 +347,11 @@
 > [!IMPORTANT]
 > **This is your "I won't quit" milestone.** After this step, the app is genuinely useful to you personally.
 
-#### Step 9.1 — Analytics API endpoint (~45 min)
+#### ✅ Step 9.1 — Analytics API endpoint (~45 min)
 
 Single endpoint that returns everything the dashboard needs in one request.
 
-- [ ] Create `src/modules/analytics/`:
+- [x] Create `src/modules/analytics/`:
   - `analytics.repository.ts`:
     - `getDashboard(startDate, endDate)` — runs two queries:
       1. SUM income / SUM expenses → `{ totalIncome, totalExpenses, net }`
@@ -360,35 +360,104 @@ Single endpoint that returns everything the dashboard needs in one request.
     - `GET /api/analytics/dashboard?start=2026-04-01&end=2026-04-30`
     - Response: `{ summary: { totalIncome, totalExpenses }, expensesByCategory: [{ categoryId, name, icon, color, amount }] }`
     - `start`/`end` are plain date strings — client derives them from the month picker, API stays range-agnostic (ready for future week/year views)
-- [ ] Register routes in `app.ts`
-- [ ] Add Bruno request file in `bruno/analytics/`
-- [ ] Test: add a few transactions via the UI, then hit the endpoint in Bruno
+- [x] Register routes in `app.ts`
+- [x] Add Bruno request file in `bruno/analytics/`
+- [x] Test: add a few transactions via the UI, then hit the endpoint in Bruno
 
 **Win:** The API returns your spending summary. Real numbers from real data you entered.
 
 ---
 
-#### Step 9.2 — Wire dashboard to real data (~45–60 min)
+#### ✅ Step 9.2 — Wire dashboard to real data (~45–60 min)
 
 > **Note:** The dashboard UI is already built (summary cards, donut chart, recent transactions table). This step replaces the hardcoded placeholder data with real API calls.
 
-- [ ] Create `src/api/analytics.ts`:
-  - Export `analyticsBreakdownQueryKey`, `analyticsSummaryQueryKey`
-  - `useAnalyticsBreakdown(startDate, endDate)`
-  - `useAnalyticsSummary(startDate, endDate)`
-- [ ] Create `src/api/transactions.ts` if not done in M6 (or reuse) — need recent transactions
-- [ ] Update `src/routes/index.tsx`:
+- [x] Create `src/api/analytics.ts`:
+  - Export `analyticsDashboardQueryKey`
+  - `useAnalyticsDashboard(startDate, endDate)`
+- [x] Create `src/api/transactions.ts` — recent transactions for the dashboard table
+- [x] Update `src/routes/index.tsx`:
   - Read selected month from TopBar's period state via **TanStack Router search params** (URL-based — shareable, bookmarkable, browser back/forward works for free)
   - Pass date range (start/end of month) to the hooks
   - Feed real data into `<SummaryCards>`, `<ExpensesByCategory>`, `<RecentTransactions>`
-- [ ] Handle loading state (skeleton) and empty state ("No transactions this month. Start tracking!")
+- [x] Handle loading state (skeleton) and empty state ("No transactions this month. Start tracking!")
 
 **Win:** Open the dashboard → see your actual monthly income, expenses, net balance, and real category breakdown. **The app is now genuinely useful.** You can track your finances. This is the moment.
 
 ---
 
+---
+
+### M10: Accounts
+
+> *"You have real accounts (Visa, Mastercard, cash) with live balances that follow your tracked transactions — plus a manual adjustment escape hatch for when reality drifts."*
+
+#### Step 10.1 — Account API (~45 min)
+
+**Schema changes:**
+
+1. `accounts` table — replace `initial_balance` with:
+   - `adjusted_balance` decimal, not null, default 0 — the starting or last-adjusted balance
+   - `adjusted_at` date, nullable — set when user manually adjusts; null means "count all transactions"
+
+2. `transaction_type` enum — add `'transfer'` alongside `'income'` and `'expense'`
+
+3. `transactions.category_id` — make nullable (null is valid when `type = 'transfer'`; enforced at service layer, not DB constraint)
+
+**Balance formula (computed on the fly):**
+```
+adjusted_balance + SUM(signed amounts WHERE adjusted_at IS NULL OR transaction_date > adjusted_at)
+```
+Includes all types — transfers shift money between accounts. Analytics always filter `WHERE type IN ('income', 'expense')`.
+
+- [ ] Generate and run Drizzle migrations for all three schema changes above
+- [ ] Update `packages/shared` types and Zod schemas: `transactionTypeEnum` gains `'transfer'`, account schema replaces `initialBalance` with `adjustedBalance` + `adjustedAt`, `categoryId` becomes optional on transaction create/update
+- [ ] Create `src/modules/accounts/`:
+  - `account.repository.ts`:
+    - `findAll()` — returns all active accounts with computed balance (SQL aggregate)
+    - `findById(id)` — single account with computed balance
+    - `create(data)` — stores user-supplied starting balance as `adjusted_balance`
+    - `update(id, data)` — name, isActive
+    - `adjustBalance(id, newBalance)` — sets `adjusted_balance = newBalance`, `adjusted_at = today`
+    - `deactivate(id)` — soft delete (`isActive = false`)
+  - `account.service.ts` — thin wrapper
+  - `account.routes.ts`:
+    - `GET /api/accounts`
+    - `POST /api/accounts`
+    - `PUT /api/accounts/:id`
+    - `POST /api/accounts/:id/adjust-balance` — body: `{ balance: number }`
+    - `DELETE /api/accounts/:id`
+- [ ] Register routes in `app.ts`
+- [ ] Update seed: replace `initialBalance` with `adjustedBalance: 0` on the default account
+- [ ] Add Bruno request files in `bruno/accounts/`
+- [ ] Test: create two accounts, add transactions (including one transfer leg manually), verify balance math, then adjust and verify again
+
+**Win:** `GET /api/accounts` returns each account with its real computed balance.
+
+---
+
+#### Step 10.2 — Accounts UI + transaction account selector (~60 min)
+
+- [ ] Create `src/api/accounts.ts`:
+  - Export `accountsQueryKey`
+  - `useAccounts()`, `useCreateAccount()`, `useUpdateAccount()`, `useAdjustBalance()`, `useDeleteAccount()`
+- [ ] Build out the `/accounts` route (currently a stub):
+  - One card per account: name, currency, live balance
+  - "Add Account" → `AccountDialog` (name, currency, initial balance)
+  - Edit button → same dialog pre-filled
+  - **"Adjust Balance"** → simple dialog: *"My [Visa] currently has…"* number input → calls `adjustBalance` — no transaction is created
+  - Deactivate button (with confirmation)
+- [ ] Add account selector to `TransactionDialog`:
+  - Required field, shown as a dropdown
+  - Defaults to the first active account (or the one selected in context)
+  - Invalidates `accountsQueryKey` on transaction mutation so balances stay live
+
+**Win:** You can add Visa and Mastercard as accounts, enter transactions against each, see live balances, and tap "Adjust Balance" to resync with reality — without polluting your category reports.
+
+---
+
 > [!IMPORTANT]
-> **🎉 ACT 2 COMPLETE.** You have a fully functional personal finance tracker. You can add income/expenses, see them in a list, categorize them, and view monthly statistics. **If you stop here, you still have a useful app.** Everything after this is enhancement.
+> **🎉 ACT 2 COMPLETE.** You have a fully functional personal finance tracker. You can add income/expenses, see them in a list, categorize them, view monthly statistics, and manage multiple accounts with live balances. **If you stop here, you still have a useful app.** Everything after this is enhancement.
 
 ---
 
@@ -400,27 +469,27 @@ Single endpoint that returns everything the dashboard needs in one request.
 
 ---
 
-### M9: Dashboard Enhancements
+### M11: Dashboard Enhancements
 
 > *"Richer stats — income breakdown and month-over-month comparison."*
 
-#### Step 9.1 — Income breakdown toggle (~30 min)
+#### Step 11.1 — Income breakdown toggle (~30 min)
 
 - [ ] Add `incomeByCategory` array to `GET /api/analytics/dashboard` response (same shape as `expensesByCategory`)
 - [ ] Add an Expense / Income toggle to the `ExpensesByCategory` dashboard card — switches the grid and donut between the two breakdowns
 
-#### Step 9.2 — vs last month comparison (~30 min)
+#### Step 11.2 — vs last month comparison (~30 min)
 
 - [ ] Extend `GET /api/analytics/dashboard` to also accept a comparison period (or compute it server-side from the same `start`/`end`)
 - [ ] Re-add the `% vs last month` row to each `SummaryCards` card, driven by real API data
 
 ---
 
-### M11: Category Hierarchy (Tree)
+### M12: Category Hierarchy (Tree)
 
 > *"Categories can have subcategories, infinitely nested."*
 
-#### Step 11.1 — Recursive category tree API (~60 min)
+#### Step 12.1 — Recursive category tree API (~60 min)
 
 - [ ] Update `category.repository.ts`:
   - `findTree()` — use PostgreSQL recursive CTE:
@@ -442,7 +511,7 @@ Single endpoint that returns everything the dashboard needs in one request.
 
 ---
 
-#### Step 11.2 — Category tree UI (~60–90 min)
+#### Step 12.2 — Category tree UI (~60–90 min)
 
 - [ ] Create `src/components/categories/CategoryTree.tsx`:
   - Collapsible tree view with indentation
@@ -455,11 +524,11 @@ Single endpoint that returns everything the dashboard needs in one request.
 
 ---
 
-### M12: Merchants & Tags
+### M13: Merchants & Tags
 
 > *"Transactions can have a merchant and multiple tags."*
 
-#### Step 12.1 — Merchant & Tag CRUD API (~45 min)
+#### Step 13.1 — Merchant & Tag CRUD API (~45 min)
 
 - [ ] Create `src/modules/merchants/`:
   - CRUD + search endpoint (`GET /api/merchants?q=ama` for autocomplete)
@@ -472,7 +541,7 @@ Single endpoint that returns everything the dashboard needs in one request.
 
 ---
 
-#### Step 12.2 — Autocomplete UI in transaction form (~60 min)
+#### Step 13.2 — Autocomplete UI in transaction form (~60 min)
 
 - [ ] Add to `TransactionDialog`:
   - **Merchant**: text input with autocomplete — type to search existing merchants, create new inline
@@ -483,11 +552,11 @@ Single endpoint that returns everything the dashboard needs in one request.
 
 ---
 
-### M13: Filters & Enhanced List
+### M14: Filters & Enhanced List
 
 > *"You can filter transactions by date, category, type, merchant, tag."*
 
-#### Step 13.1 — Transaction filters UI (~60–90 min)
+#### Step 14.1 — Transaction filters UI (~60–90 min)
 
 - [ ] Add a filter bar above the transaction list:
   - Date range picker (start date – end date, using `<input type="date">`)
@@ -501,11 +570,11 @@ Single endpoint that returns everything the dashboard needs in one request.
 
 ---
 
-### M14: Polish & Deploy 🚀
+### M15: Polish & Deploy 🚀
 
 > *"Responsive, error-handled, and running on your Raspberry Pi."*
 
-#### Step 14.1 — UX Polish (~60 min)
+#### Step 15.1 — UX Polish (~60 min)
 
 - [ ] **Toast notifications**: build a simple toast system (or use `sonner` — `pnpm add sonner`) for success/error feedback on all mutations
 - [ ] **Loading states**: skeleton loaders on lists and dashboard cards
@@ -517,7 +586,7 @@ Single endpoint that returns everything the dashboard needs in one request.
 
 ---
 
-#### Step 14.2 — Docker Compose for Raspberry Pi (~60 min)
+#### Step 15.2 — Docker Compose for Raspberry Pi (~60 min)
 
 - [ ] Create a `Dockerfile` for the API:
   - Multi-stage build: build TypeScript → run with Node
@@ -569,11 +638,11 @@ Can't decide what to do today? Use this:
 
 | I have... | Do this | Milestone |
 |-----------|---------|-----------|
-| 45 min | Step 9.1 (analytics API endpoint) | M9 |
-| 60-90 min | Step 9.2 (wire dashboard to real data) | M9 |
-| Feeling lazy | Step 14.1 — add toasts and loading states (polish is easy dopamine) | M14 |
+| 45 min | Step 10.1 (account API + balance formula) | M10 |
+| 60-90 min | Step 10.2 (accounts UI + transaction account selector) | M10 |
+| Feeling lazy | Step 15.1 — add toasts and loading states (polish is easy dopamine) | M15 |
 
-**Where you are right now:** M9 is next. Start there.
+**Where you are right now:** M10 is next. Start there.
 
 ---
 
