@@ -16,5 +16,10 @@ export const updateCategorySchema = createCategorySchema
   .omit({ parentId: true })
   .partial();
 
+export const deleteCategoryQuerySchema = z.object({
+  reassignToCategoryId: z.string().uuid("Invalid category ID").optional(),
+});
+
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
+export type DeleteCategoryQuery = z.infer<typeof deleteCategoryQuerySchema>;
