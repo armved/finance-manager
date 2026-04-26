@@ -1,79 +1,81 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 import { PageContainer } from "../components/layout/page-container";
 import { TopBar } from "../components/layout/top-bar";
 import { ExpensesByCategory } from "../components/dashboard/expenses-by-category";
 import { RecentTransactions } from "../components/dashboard/recent-transactions";
 import { SummaryCards } from "../components/dashboard/summary-cards";
-import type { CategoryAmount } from "../components/dashboard/expenses-by-category";
-import type { Transaction } from "../components/dashboard/recent-transactions";
+import { useAnalyticsDashboard } from "../api/analytics";
+import { useTransactions } from "../api/transactions";
+
+const searchSchema = z.object({
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/)
+    .optional(),
+});
 
 export const Route = createFileRoute("/")({
+  validateSearch: searchSchema,
   component: DashboardPage,
 });
 
-// ─── Static data ─────────────────────────────────────────────────────────────
-// Placeholder values. Replace with TanStack Query hooks when the API is wired.
+function currentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
-const SUMMARY = {
-  totalIncome: 14250.0,
-  totalExpenses: 4820.75,
-  netCashFlow: 9429.25,
-};
-
-const CATEGORY_AMOUNTS: readonly CategoryAmount[] = [
-  { label: "Housing", amount: 2400 },
-  { label: "Food & Drink", amount: 845 },
-  { label: "Shopping", amount: 620 },
-  { label: "Groceries", amount: 450 },
-  { label: "Transport", amount: 415 },
-  { label: "Utilities", amount: 320 },
-  { label: "Education", amount: 300 },
-  { label: "Insurance", amount: 250 },
-  { label: "Healthcare", amount: 180 },
-  { label: "Entertainment", amount: 150 },
-];
-
-const TRANSACTIONS: readonly Transaction[] = [
-  {
-    id: "1",
-    merchant: "Whole Foods Market",
-    category: "Food & Drink",
-    date: "Apr 14, 2026",
-    amount: 124.5,
-    type: "expense",
-  },
-  {
-    id: "2",
-    merchant: "ConEdison Utilities",
-    category: "Housing",
-    date: "Apr 12, 2026",
-    amount: 145.2,
-    type: "expense",
-  },
-  {
-    id: "3",
-    merchant: "Stripe Payout",
-    category: "Income",
-    date: "Apr 10, 2026",
-    amount: 4250.0,
-    type: "income",
-  },
-];
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+function monthToDateRange(month: string): { startDate: string; endDate: string } {
+  const year = parseInt(month.slice(0, 4), 10);
+  const mon = parseInt(month.slice(5, 7), 10);
+  const lastDay = new Date(year, mon, 0).getDate();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    startDate: `${year}-${pad(mon)}-01`,
+    endDate: `${year}-${pad(mon)}-${pad(lastDay)}`,
+  };
+}
 
 function DashboardPage() {
+  const navigate = useNavigate({ from: "/" });
+  const { month = currentMonth() } = Route.useSearch();
+  const { startDate, endDate } = monthToDateRange(month);
+
+  const { data: analytics } = useAnalyticsDashboard(startDate, endDate);
+  const { data: txPage, isPending: txPending } = useTransactions({ startDate, endDate, limit: 10 });
+
+  function handleMonthChange(newMonth: string) {
+    void navigate({ search: { month: newMonth } });
+  }
+
+  const totalIncome = analytics?.summary.totalIncome ?? 0;
+  const totalExpenses = analytics?.summary.totalExpenses ?? 0;
+
+  const categoryAmounts =
+    analytics?.expensesByCategory.map((c) => ({
+      label: c.name,
+      amount: c.amount,
+      color: c.color,
+    })) ?? [];
+
   return (
     <>
-      <TopBar />
+      <TopBar month={month} onMonthChange={handleMonthChange} />
       <PageContainer>
         <div className="space-y-5">
-          <SummaryCards {...SUMMARY} />
-          <ExpensesByCategory
-            total={SUMMARY.totalExpenses}
-            categories={CATEGORY_AMOUNTS}
+          <SummaryCards
+            totalIncome={totalIncome}
+            totalExpenses={totalExpenses}
+            netCashFlow={totalIncome - totalExpenses}
           />
-          <RecentTransactions transactions={TRANSACTIONS} />
+          <ExpensesByCategory
+            total={totalExpenses}
+            categories={categoryAmounts}
+          />
+          <RecentTransactions
+            transactions={txPage?.data ?? []}
+            isPending={txPending}
+          />
         </div>
       </PageContainer>
     </>

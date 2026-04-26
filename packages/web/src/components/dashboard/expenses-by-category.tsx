@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { Category } from "@finance-manager/shared";
-import { CATEGORY_PALETTE, DEFAULT_EXPENSE_CATEGORY } from "../../lib/category-meta";
+import { DEFAULT_EXPENSE_CATEGORY } from "../../lib/category-meta";
 import { getIconComponent } from "../../lib/category-icons";
 import { useCategories, useDeleteCategory } from "../../api/categories";
 import { useUIStore } from "../../store/ui";
@@ -11,6 +11,7 @@ import { ConfirmDialog } from "../ui/ConfirmDialog";
 export interface CategoryAmount {
   label: string;
   amount: number;
+  color?: string | null;
 }
 
 export interface ExpensesByCategoryProps {
@@ -200,15 +201,12 @@ function buildDonutGradient(
 ): string {
   let accumulated = 0;
 
-  const stops = categories.map(({ amount }, i) => {
+  const stops = categories.map(({ amount, color }) => {
     const pct = total > 0 ? (amount / total) * 100 : 0;
     const from = accumulated.toFixed(2);
     accumulated += pct;
     const to = accumulated.toFixed(2);
-    const resolvedColor =
-      i < CATEGORY_PALETTE.length
-        ? CATEGORY_PALETTE[i]
-        : "var(--color-neutral-700)";
+    const resolvedColor = color ?? DEFAULT_EXPENSE_CATEGORY.color;
     return `${resolvedColor} ${from}% ${to}%`;
   });
 

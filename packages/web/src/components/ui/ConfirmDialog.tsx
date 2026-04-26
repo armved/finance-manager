@@ -39,11 +39,9 @@ export function ConfirmDialog({
             </button>
           </div>
 
-          {description && (
-            <Dialog.Description className="mb-5 text-sm text-muted-foreground">
-              {description}
-            </Dialog.Description>
-          )}
+          <Dialog.Description className={description ? "mb-5 text-sm text-muted-foreground" : "sr-only"}>
+            {description ?? ""}
+          </Dialog.Description>
 
           <div className="flex gap-3">
             <button
