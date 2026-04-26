@@ -1,0 +1,16 @@
+meta {
+  name: Dashboard
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/analytics/dashboard
+  body: none
+  auth: none
+}
+
+params:query {
+  start: 2026-04-01
+  end: 2026-04-30
+}

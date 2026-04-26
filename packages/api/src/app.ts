@@ -6,6 +6,7 @@ import { dbPlugin } from "./plugins/db";
 import { healthRoutes } from "./routes/health";
 import { transactionRoutes } from "./modules/transactions/transaction.routes";
 import { categoryRoutes } from "./modules/categories/category.routes";
+import { analyticsRoutes } from "./modules/analytics/analytics.routes";
 
 export async function buildApp() {
   const app = Fastify({
@@ -35,6 +36,7 @@ export async function buildApp() {
   await app.register(healthRoutes);
   await app.register(transactionRoutes);
   await app.register(categoryRoutes);
+  await app.register(analyticsRoutes);
 
   return app;
 }
