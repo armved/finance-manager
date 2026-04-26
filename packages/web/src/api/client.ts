@@ -39,7 +39,7 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const response = await fetch(path, {
     headers: {
-      "Content-Type": "application/json",
+      ...(options?.body ? { "Content-Type": "application/json" } : {}),
       ...options?.headers,
     },
     ...options,

@@ -42,7 +42,7 @@ export const transactionRoutes = fp(async (fastify: FastifyInstance) => {
   fastify.delete<{ Params: { id: string } }>("/api/transactions/:id", async (request, reply) => {
     const deleted = await service.deleteTransaction(request.params.id, request.server.db);
     if (!deleted) return reply.notFound("Transaction not found");
-    reply.code(204);
+    return reply.code(204).send();
   });
 
   // ── Error handler: turn ZodErrors into 400s ───────────────────────────────
