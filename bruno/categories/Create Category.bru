@@ -1,0 +1,21 @@
+meta {
+  name: Create Category
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/categories
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Groceries",
+    "type": "expense",
+    "icon": "shopping-cart",
+    "color": "#4ade80",
+    "sortOrder": 0
+  }
+}

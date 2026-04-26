@@ -1,0 +1,22 @@
+meta {
+  name: Update Category
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/categories/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: <category-id-here>
+}
+
+body:json {
+  {
+    "name": "Groceries & Food",
+    "color": "#22c55e"
+  }
+}

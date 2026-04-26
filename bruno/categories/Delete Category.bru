@@ -1,0 +1,19 @@
+meta {
+  name: Delete Category
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/categories/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: <category-id-here>
+}
+
+params:query {
+  ~reassignToCategoryId: <target-category-id>
+}
