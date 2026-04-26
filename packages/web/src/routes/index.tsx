@@ -18,9 +18,6 @@ const SUMMARY = {
   totalIncome: 14250.0,
   totalExpenses: 4820.75,
   netCashFlow: 9429.25,
-  incomeChangePercent: 12.5,
-  expensesChangePercent: -2.1,
-  netCashFlowChangePercent: 8.3,
 };
 
 const CATEGORY_AMOUNTS: readonly CategoryAmount[] = [

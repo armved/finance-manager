@@ -340,20 +340,6 @@
 
 ---
 
-#### Step 8.2 — Category management page (~60 min)
-
-- [ ] Add "Categories" nav link to the sidebar
-- [ ] Create `/categories` route: `src/routes/categories.tsx`:
-  - List of categories with name, type badge, color swatch, icon
-  - "Add Category" button → dialog with form (name, type selector, color picker, icon picker)
-  - Edit button on each category → same dialog, pre-filled
-  - Delete button → confirmation dialog that asks "Reassign transactions to:" with category dropdown
-- [ ] Update the transaction form's category `<select>` to show user-created categories (already backed by `GET /api/categories`)
-
-**Win:** Create categories like "Groceries", "Salary", "Entertainment" → they appear in the transaction form dropdown.
-
----
-
 ### M9: Dashboard with Monthly Stats 📊
 
 > *"You can see how much you spent vs earned this month."*
@@ -363,16 +349,20 @@
 
 #### Step 9.1 — Analytics API endpoint (~45 min)
 
+Single endpoint that returns everything the dashboard needs in one request.
+
 - [ ] Create `src/modules/analytics/`:
   - `analytics.repository.ts`:
-    - `getBreakdownByCategory(startDate, endDate)` — `GROUP BY category_id`, returns `{ categoryId, categoryName, total, type }`
-    - `getSummary(startDate, endDate)` — returns `{ totalIncome, totalExpenses, net }`
+    - `getDashboard(startDate, endDate)` — runs two queries:
+      1. SUM income / SUM expenses → `{ totalIncome, totalExpenses, net }`
+      2. LEFT JOIN all expense categories with their transaction totals → always returns every category, `amount: 0` when no transactions
   - `analytics.routes.ts`:
-    - `GET /api/analytics/breakdown?start=2026-04-01&end=2026-04-30`
-    - `GET /api/analytics/summary?start=2026-04-01&end=2026-04-30`
+    - `GET /api/analytics/dashboard?start=2026-04-01&end=2026-04-30`
+    - Response: `{ summary: { totalIncome, totalExpenses }, expensesByCategory: [{ categoryId, name, icon, color, amount }] }`
+    - `start`/`end` are plain date strings — client derives them from the month picker, API stays range-agnostic (ready for future week/year views)
 - [ ] Register routes in `app.ts`
-- [ ] Add Bruno request files in `bruno/analytics/`
-- [ ] Test: add a few transactions via the UI, then hit the analytics endpoints in Bruno
+- [ ] Add Bruno request file in `bruno/analytics/`
+- [ ] Test: add a few transactions via the UI, then hit the endpoint in Bruno
 
 **Win:** The API returns your spending summary. Real numbers from real data you entered.
 
@@ -410,11 +400,27 @@
 
 ---
 
-### M9: Category Hierarchy (Tree)
+### M9: Dashboard Enhancements
+
+> *"Richer stats — income breakdown and month-over-month comparison."*
+
+#### Step 9.1 — Income breakdown toggle (~30 min)
+
+- [ ] Add `incomeByCategory` array to `GET /api/analytics/dashboard` response (same shape as `expensesByCategory`)
+- [ ] Add an Expense / Income toggle to the `ExpensesByCategory` dashboard card — switches the grid and donut between the two breakdowns
+
+#### Step 9.2 — vs last month comparison (~30 min)
+
+- [ ] Extend `GET /api/analytics/dashboard` to also accept a comparison period (or compute it server-side from the same `start`/`end`)
+- [ ] Re-add the `% vs last month` row to each `SummaryCards` card, driven by real API data
+
+---
+
+### M11: Category Hierarchy (Tree)
 
 > *"Categories can have subcategories, infinitely nested."*
 
-#### Step 9.1 — Recursive category tree API (~60 min)
+#### Step 11.1 — Recursive category tree API (~60 min)
 
 - [ ] Update `category.repository.ts`:
   - `findTree()` — use PostgreSQL recursive CTE:
@@ -436,7 +442,7 @@
 
 ---
 
-#### Step 9.2 — Category tree UI (~60–90 min)
+#### Step 11.2 — Category tree UI (~60–90 min)
 
 - [ ] Create `src/components/categories/CategoryTree.tsx`:
   - Collapsible tree view with indentation
@@ -449,11 +455,11 @@
 
 ---
 
-### M10: Merchants & Tags
+### M12: Merchants & Tags
 
 > *"Transactions can have a merchant and multiple tags."*
 
-#### Step 10.1 — Merchant & Tag CRUD API (~45 min)
+#### Step 12.1 — Merchant & Tag CRUD API (~45 min)
 
 - [ ] Create `src/modules/merchants/`:
   - CRUD + search endpoint (`GET /api/merchants?q=ama` for autocomplete)
@@ -466,7 +472,7 @@
 
 ---
 
-#### Step 10.2 — Autocomplete UI in transaction form (~60 min)
+#### Step 12.2 — Autocomplete UI in transaction form (~60 min)
 
 - [ ] Add to `TransactionDialog`:
   - **Merchant**: text input with autocomplete — type to search existing merchants, create new inline
@@ -477,11 +483,11 @@
 
 ---
 
-### M11: Filters & Enhanced List
+### M13: Filters & Enhanced List
 
 > *"You can filter transactions by date, category, type, merchant, tag."*
 
-#### Step 11.1 — Transaction filters UI (~60–90 min)
+#### Step 13.1 — Transaction filters UI (~60–90 min)
 
 - [ ] Add a filter bar above the transaction list:
   - Date range picker (start date – end date, using `<input type="date">`)
@@ -495,11 +501,11 @@
 
 ---
 
-### M12: Polish & Deploy 🚀
+### M14: Polish & Deploy 🚀
 
 > *"Responsive, error-handled, and running on your Raspberry Pi."*
 
-#### Step 12.1 — UX Polish (~60 min)
+#### Step 14.1 — UX Polish (~60 min)
 
 - [ ] **Toast notifications**: build a simple toast system (or use `sonner` — `pnpm add sonner`) for success/error feedback on all mutations
 - [ ] **Loading states**: skeleton loaders on lists and dashboard cards
@@ -511,7 +517,7 @@
 
 ---
 
-#### Step 12.2 — Docker Compose for Raspberry Pi (~60 min)
+#### Step 14.2 — Docker Compose for Raspberry Pi (~60 min)
 
 - [ ] Create a `Dockerfile` for the API:
   - Multi-stage build: build TypeScript → run with Node
@@ -563,12 +569,11 @@ Can't decide what to do today? Use this:
 
 | I have... | Do this | Milestone |
 |-----------|---------|-----------|
-| 30 min | Step 8.1 (category CRUD API) | M8 |
-| 60 min | Step 8.2 (category management page) or Step 9.1 (analytics API) | M8 / M9 |
+| 45 min | Step 9.1 (analytics API endpoint) | M9 |
 | 60-90 min | Step 9.2 (wire dashboard to real data) | M9 |
-| Feeling lazy | Step 12.1 - add toasts and loading states (polish is easy dopamine) | M12 |
+| Feeling lazy | Step 14.1 — add toasts and loading states (polish is easy dopamine) | M14 |
 
-**Where you are right now:** M8 is next. Start there.
+**Where you are right now:** M9 is next. Start there.
 
 ---
 
