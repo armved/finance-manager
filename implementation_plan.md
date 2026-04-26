@@ -324,17 +324,17 @@
 
 > *"You can create, rename, and organize your categories."*
 
-#### Step 8.1 — Category CRUD API (~45 min)
+#### ✅ Step 8.1 — Category CRUD API (~45 min)
 
-- [ ] Expand `src/modules/categories/` (stub already exists from M7 step 7.1):
+- [x] Expand `src/modules/categories/` (stub already exists from M7 step 7.1):
   - `category.repository.ts`:
     - `findAll()` — return flat list
     - `create(data)` — name, type (income/expense), icon, color
     - `update(id, data)`
     - `delete(id, reassignToCategoryId)` — reassign transactions, then delete
   - `category.routes.ts` — full CRUD endpoints
-- [ ] Protect the default "Uncategorized" categories from deletion (check `isDefault` flag)
-- [ ] Add Bruno request files in `bruno/categories/`
+- [x] Protect the default "Uncategorized" categories from deletion (check `isDefault` flag)
+- [x] Add Bruno request files in `bruno/categories/`
 
 **Win:** Category CRUD works via API. Default categories can't be deleted.
 
