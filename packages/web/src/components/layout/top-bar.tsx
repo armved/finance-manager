@@ -4,8 +4,11 @@ import {
   ChevronRight,
   Plus,
 } from "lucide-react";
+import { useUIStore } from "../../store/ui";
 
 export function TopBar() {
+  const openAddTransaction = useUIStore((s) => s.openAddTransaction);
+
   return (
     <header className="flex flex-shrink-0 items-center justify-between border-b border-border bg-surface px-6 py-3">
       {/* Period navigation */}
@@ -24,7 +27,10 @@ export function TopBar() {
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        <button className="flex items-center gap-2 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-600">
+        <button
+          onClick={openAddTransaction}
+          className="flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-600"
+        >
           <Plus className="h-4 w-4" />
           Add Transaction
         </button>

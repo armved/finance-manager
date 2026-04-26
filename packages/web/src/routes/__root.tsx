@@ -1,5 +1,6 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { Sidebar } from "../components/layout/sidebar";
+import { TransactionDialog } from "../components/transactions/TransactionDialog";
 
 export const Route = createRootRoute({
   component: AppShell,
@@ -12,6 +13,7 @@ function AppShell() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <Outlet />
       </div>
+      <TransactionDialog />
     </div>
   );
 }
