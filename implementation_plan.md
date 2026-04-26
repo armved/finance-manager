@@ -290,11 +290,11 @@
 
 > *"You can add a transaction from the UI without touching the API directly."*
 
-#### Step 7.1 — "Add Transaction" dialog (~60–90 min)
+#### ✅ Step 7.1 — "Add Transaction" dialog (~60–90 min)
 
-- [ ] Install: `react-hook-form`, connect with Zod schemas from `@finance-manager/shared`
-- [ ] Build a modal/dialog using CSS (or a headless Radix `Dialog` — `pnpm add @radix-ui/react-dialog`)
-- [ ] Create `src/components/transactions/TransactionDialog.tsx`:
+- [x] Install: `react-hook-form`, connect with Zod schemas from `@finance-manager/shared`
+- [x] Build a modal/dialog using CSS (or a headless Radix `Dialog` — `pnpm add @radix-ui/react-dialog`)
+- [x] Create `src/components/transactions/TransactionDialog.tsx`:
   - Triggered by the "Add Transaction" button in `top-bar.tsx` (already exists — just wire it up)
   - Form fields:
     - **Type**: toggle — Income or Expense (default: Expense)
@@ -303,31 +303,65 @@
     - **Category**: `<select>` fetching categories from `GET /api/categories` (add that endpoint first — see note below)
   - On submit: call `useCreateTransaction()` mutation
   - On success: close dialog, invalidate `transactionsQueryKey`
-- [ ] Add a minimal `GET /api/categories` endpoint (flat list, no hierarchy needed yet) so the form has categories to pick from
+- [x] Add a minimal `GET /api/categories` endpoint (flat list, no hierarchy needed yet) so the form has categories to pick from
 
 **Win:** Click "Add Transaction" → fill in the form → submit → dialog closes → transaction appears in the list instantly. **This is the core loop of the entire app. You just built it.** 🎉
 
 ---
 
-#### Step 7.2 — Edit & Delete transactions (~45–60 min)
+#### ✅ Step 7.2 — Edit & Delete transactions (~45–60 min)
 
-- [ ] Click a transaction row → opens the same dialog pre-filled with existing data
-- [ ] Add "Edit" mode to `TransactionDialog` — calls `useUpdateTransaction()`
-- [ ] Add a "Delete" button (with confirmation) — calls `useDeleteTransaction()`
-- [ ] On success: list refreshes, brief visual feedback (e.g. row flash or count update)
+- [x] Click a transaction row → opens the same dialog pre-filled with existing data
+- [x] Add "Edit" mode to `TransactionDialog` — calls `useUpdateTransaction()`
+- [x] Add a "Delete" button (with confirmation) — calls `useDeleteTransaction()`
+- [x] On success: list refreshes, brief visual feedback (e.g. row flash or count update)
 
 **Win:** Full CRUD from the UI. Add, edit, delete — all from the browser. You never need to touch the API directly again.
 
 ---
 
-### M8: Dashboard with Monthly Stats 📊
+### M8: Category Management
+
+> *"You can create, rename, and organize your categories."*
+
+#### Step 8.1 — Category CRUD API (~45 min)
+
+- [ ] Expand `src/modules/categories/` (stub already exists from M7 step 7.1):
+  - `category.repository.ts`:
+    - `findAll()` — return flat list
+    - `create(data)` — name, type (income/expense), icon, color
+    - `update(id, data)`
+    - `delete(id, reassignToCategoryId)` — reassign transactions, then delete
+  - `category.routes.ts` — full CRUD endpoints
+- [ ] Protect the default "Uncategorized" categories from deletion (check `isDefault` flag)
+- [ ] Add Bruno request files in `bruno/categories/`
+
+**Win:** Category CRUD works via API. Default categories can't be deleted.
+
+---
+
+#### Step 8.2 — Category management page (~60 min)
+
+- [ ] Add "Categories" nav link to the sidebar
+- [ ] Create `/categories` route: `src/routes/categories.tsx`:
+  - List of categories with name, type badge, color swatch, icon
+  - "Add Category" button → dialog with form (name, type selector, color picker, icon picker)
+  - Edit button on each category → same dialog, pre-filled
+  - Delete button → confirmation dialog that asks "Reassign transactions to:" with category dropdown
+- [ ] Update the transaction form's category `<select>` to show user-created categories (already backed by `GET /api/categories`)
+
+**Win:** Create categories like "Groceries", "Salary", "Entertainment" → they appear in the transaction form dropdown.
+
+---
+
+### M9: Dashboard with Monthly Stats 📊
 
 > *"You can see how much you spent vs earned this month."*
 
 > [!IMPORTANT]
 > **This is your "I won't quit" milestone.** After this step, the app is genuinely useful to you personally.
 
-#### Step 8.1 — Analytics API endpoint (~45 min)
+#### Step 9.1 — Analytics API endpoint (~45 min)
 
 - [ ] Create `src/modules/analytics/`:
   - `analytics.repository.ts`:
@@ -344,7 +378,7 @@
 
 ---
 
-#### Step 8.2 — Wire dashboard to real data (~45–60 min)
+#### Step 9.2 — Wire dashboard to real data (~45–60 min)
 
 > **Note:** The dashboard UI is already built (summary cards, donut chart, recent transactions table). This step replaces the hardcoded placeholder data with real API calls.
 
@@ -364,7 +398,7 @@
 ---
 
 > [!IMPORTANT]
-> **🎉 ACT 2 COMPLETE.** You have a fully functional personal finance tracker. You can add income/expenses, see them in a list, and view monthly statistics. **If you stop here, you still have a useful app.** Everything after this is enhancement.
+> **🎉 ACT 2 COMPLETE.** You have a fully functional personal finance tracker. You can add income/expenses, see them in a list, categorize them, and view monthly statistics. **If you stop here, you still have a useful app.** Everything after this is enhancement.
 
 ---
 
@@ -376,45 +410,11 @@
 
 ---
 
-### M9: Category Management
-
-> *"You can create, rename, and organize your categories."*
-
-#### Step 9.1 — Category CRUD API (~45 min)
-
-- [ ] Expand `src/modules/categories/` (stub already exists from M7 step 7.1):
-  - `category.repository.ts`:
-    - `findAll()` — return flat list
-    - `create(data)` — name, type (income/expense), icon, color
-    - `update(id, data)`
-    - `delete(id, reassignToCategoryId)` — reassign transactions, then delete
-  - `category.routes.ts` — full CRUD endpoints
-- [ ] Protect the default "Uncategorized" categories from deletion (check `isDefault` flag)
-- [ ] Add Bruno request files in `bruno/categories/`
-
-**Win:** Category CRUD works via API. Default categories can't be deleted.
-
----
-
-#### Step 9.2 — Category management page (~60 min)
-
-- [ ] Add "Categories" nav link to the sidebar
-- [ ] Create `/categories` route: `src/routes/categories.tsx`:
-  - List of categories with name, type badge, color swatch, icon
-  - "Add Category" button → dialog with form (name, type selector, color picker, icon picker)
-  - Edit button on each category → same dialog, pre-filled
-  - Delete button → confirmation dialog that asks "Reassign transactions to:" with category dropdown
-- [ ] Update the transaction form's category `<select>` to show user-created categories (already backed by `GET /api/categories`)
-
-**Win:** Create categories like "Groceries", "Salary", "Entertainment" → they appear in the transaction form dropdown.
-
----
-
-### M10: Category Hierarchy (Tree)
+### M9: Category Hierarchy (Tree)
 
 > *"Categories can have subcategories, infinitely nested."*
 
-#### Step 10.1 — Recursive category tree API (~60 min)
+#### Step 9.1 — Recursive category tree API (~60 min)
 
 - [ ] Update `category.repository.ts`:
   - `findTree()` — use PostgreSQL recursive CTE:
@@ -436,7 +436,7 @@
 
 ---
 
-#### Step 10.2 — Category tree UI (~60–90 min)
+#### Step 9.2 — Category tree UI (~60–90 min)
 
 - [ ] Create `src/components/categories/CategoryTree.tsx`:
   - Collapsible tree view with indentation
@@ -449,11 +449,11 @@
 
 ---
 
-### M11: Merchants & Tags
+### M10: Merchants & Tags
 
 > *"Transactions can have a merchant and multiple tags."*
 
-#### Step 11.1 — Merchant & Tag CRUD API (~45 min)
+#### Step 10.1 — Merchant & Tag CRUD API (~45 min)
 
 - [ ] Create `src/modules/merchants/`:
   - CRUD + search endpoint (`GET /api/merchants?q=ama` for autocomplete)
@@ -466,7 +466,7 @@
 
 ---
 
-#### Step 11.2 — Autocomplete UI in transaction form (~60 min)
+#### Step 10.2 — Autocomplete UI in transaction form (~60 min)
 
 - [ ] Add to `TransactionDialog`:
   - **Merchant**: text input with autocomplete — type to search existing merchants, create new inline
@@ -477,11 +477,11 @@
 
 ---
 
-### M12: Filters & Enhanced List
+### M11: Filters & Enhanced List
 
 > *"You can filter transactions by date, category, type, merchant, tag."*
 
-#### Step 12.1 — Transaction filters UI (~60–90 min)
+#### Step 11.1 — Transaction filters UI (~60–90 min)
 
 - [ ] Add a filter bar above the transaction list:
   - Date range picker (start date – end date, using `<input type="date">`)
@@ -495,11 +495,11 @@
 
 ---
 
-### M13: Polish & Deploy 🚀
+### M12: Polish & Deploy 🚀
 
 > *"Responsive, error-handled, and running on your Raspberry Pi."*
 
-#### Step 13.1 — UX Polish (~60 min)
+#### Step 12.1 — UX Polish (~60 min)
 
 - [ ] **Toast notifications**: build a simple toast system (or use `sonner` — `pnpm add sonner`) for success/error feedback on all mutations
 - [ ] **Loading states**: skeleton loaders on lists and dashboard cards
@@ -511,7 +511,7 @@
 
 ---
 
-#### Step 13.2 — Docker Compose for Raspberry Pi (~60 min)
+#### Step 12.2 — Docker Compose for Raspberry Pi (~60 min)
 
 - [ ] Create a `Dockerfile` for the API:
   - Multi-stage build: build TypeScript → run with Node
@@ -563,13 +563,12 @@ Can't decide what to do today? Use this:
 
 | I have... | Do this | Milestone |
 |-----------|---------|-----------|
-| 30 min | Step 8.1 (analytics API) or Step 9.1 (category API) | M8 / M9 |
-| 45 min | Step 4.1 (transaction API) or Step 7.2 (edit & delete) | M4 / M7 |
-| 60 min | Step 6.1 (transaction list UI) or Step 8.2 (wire dashboard) | M6 / M8 |
-| 90 min | Step 7.1 (add transaction form) — the core loop | M7 |
-| Feeling lazy | Step 13.1 — add toasts and loading states (polish is easy dopamine) | M13 |
+| 30 min | Step 8.1 (category CRUD API) | M8 |
+| 60 min | Step 8.2 (category management page) or Step 9.1 (analytics API) | M8 / M9 |
+| 60-90 min | Step 9.2 (wire dashboard to real data) | M9 |
+| Feeling lazy | Step 12.1 - add toasts and loading states (polish is easy dopamine) | M12 |
 
-**Where you are right now:** M4 is next. Start there.
+**Where you are right now:** M8 is next. Start there.
 
 ---
 
