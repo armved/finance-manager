@@ -1,5 +1,6 @@
 import { SlidersHorizontal } from "lucide-react";
-import { getCategoryMeta } from "../../lib/category-meta";
+import {getIconComponent} from "../../lib/category-icons";
+import {DEFAULT_EXPENSE_CATEGORY} from "../../lib/category-meta";
 
 export interface Transaction {
   id: string;
@@ -49,8 +50,9 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
 }
 
 function TransactionRow({ tx }: { tx: Transaction }) {
-  const { icon: Icon, color } = getCategoryMeta(tx.category);
   const isIncome = tx.type === "income";
+  const IconComp = DEFAULT_EXPENSE_CATEGORY.icon;
+  const categoryColor = DEFAULT_EXPENSE_CATEGORY.color;
   const formattedAmount = `${isIncome ? "+" : "-"}€${tx.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
@@ -59,9 +61,9 @@ function TransactionRow({ tx }: { tx: Transaction }) {
         <div className="flex items-center gap-3">
           <div
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
-            style={{ backgroundColor: `${color}20`, color }}
+            style={{ backgroundColor: `${categoryColor}20`, color: categoryColor }}
           >
-            <Icon className="h-[18px] w-[18px]" />
+            <IconComp className="h-[18px] w-[18px]" />
           </div>
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="text-sm font-semibold leading-tight text-foreground">{tx.category}</span>

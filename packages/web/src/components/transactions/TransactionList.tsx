@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import {Pencil, ShoppingBag, Trash2} from "lucide-react";
 import { useTransactions, useDeleteTransaction } from "../../api/transactions";
 import { useUIStore } from "../../store/ui";
-import { getCategoryMeta } from "../../lib/category-meta";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { getIconComponent } from "../../lib/category-icons";
+import {DEFAULT_EXPENSE_CATEGORY} from "../../lib/category-meta";
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
@@ -106,9 +107,10 @@ export function TransactionList({ typeFilter = "all" }: TransactionListProps) {
             ) : (
               rows?.map((tx) => {
                 const name = tx.merchant?.name ?? "Transaction";
-                const { icon: Icon, color } = getCategoryMeta(tx.category.name);
-                const categoryColor = tx.category.color ?? color;
+                const categoryColor = tx.category.color || DEFAULT_EXPENSE_CATEGORY.color;
                 const isIncome = tx.type === "income";
+                const IconComp = getIconComponent(tx.category.icon) ?? DEFAULT_EXPENSE_CATEGORY.icon;
+
                 return (
                   <tr
                     key={tx.id}
@@ -119,9 +121,9 @@ export function TransactionList({ typeFilter = "all" }: TransactionListProps) {
                       <div className="flex items-center gap-3">
                         <div
                           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
-                          style={{ backgroundColor: `${categoryColor}20`, color: categoryColor }}
+                          style={{ backgroundColor: `${categoryColor}20`}}
                         >
-                          <Icon className="h-[18px] w-[18px]" />
+                          <IconComp className="h-[18px] w-[18px]" style={{ color: categoryColor }} />
                         </div>
                         <div className="flex min-w-0 flex-col gap-0.5">
                           <span className="text-sm font-semibold leading-tight text-foreground">
