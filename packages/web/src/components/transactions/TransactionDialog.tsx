@@ -26,7 +26,11 @@ function today(): string {
 export function TransactionDialog() {
   const isOpen = useUIStore((s) => s.isAddTransactionOpen);
   const editingTransaction = useUIStore((s) => s.editingTransaction);
+  const preselectedCategoryId = useUIStore((s) => s.preselectedCategoryId);
   const close = useUIStore((s) => s.closeAddTransaction);
+
+  const preselectedCategoryIdRef = useRef(preselectedCategoryId);
+  preselectedCategoryIdRef.current = preselectedCategoryId;
   const isEditing = editingTransaction !== null;
 
   const createTx = useCreateTransaction();
@@ -72,7 +76,9 @@ export function TransactionDialog() {
       });
     } else {
       const cats = categoriesRef.current;
-      const defaultCat = cats?.find((c) => c.isDefault) ?? cats?.[0];
+      const preselectId = preselectedCategoryIdRef.current;
+      const preselectedCat = preselectId ? cats?.find((c) => c.id === preselectId) : undefined;
+      const defaultCat = preselectedCat ?? cats?.find((c) => c.isDefault) ?? cats?.[0];
       reset({ type: "expense", transactionDate: today(), categoryId: defaultCat?.id ?? "" });
     }
   // editingTransaction intentionally omitted: we only want this to run on open/close transitions
