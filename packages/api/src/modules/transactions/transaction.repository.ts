@@ -47,11 +47,11 @@ function toTransactionDTO(row: TransactionRow): TransactionWithRelations {
     amount: parseFloat(row.amount),
     transactionDate: row.transactionDate,
     accountId: row.accountId,
-    categoryId: row.categoryId,
+    categoryId: row.categoryId ?? null,
     merchantId: row.merchantId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    category: row.category,
+    category: row.category ?? null,
     account: row.account,
     merchant: row.merchant,
     tags: row.transactionTags.map((tt) => tt.tag),
@@ -128,7 +128,7 @@ export async function create(
         amount: String(data.amount),
         transactionDate: data.transactionDate ?? new Date().toISOString().slice(0, 10),
         accountId: data.accountId,
-        categoryId: data.categoryId,
+        categoryId: data.categoryId ?? null,
         merchantId: data.merchantId ?? null,
       })
       .returning({ id: transactions.id });

@@ -14,7 +14,7 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   transactionDate: date("transaction_date").notNull(),
   accountId: uuid("account_id").notNull().references(() => accounts.id),
-  categoryId: uuid("category_id").notNull().references(() => categories.id),
+  categoryId: uuid("category_id").references(() => categories.id),
   merchantId: uuid("merchant_id").references(() => merchants.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })

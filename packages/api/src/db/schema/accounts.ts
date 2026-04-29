@@ -7,9 +7,10 @@ export const accounts = pgTable("accounts", {
   currencyCode: varchar("currency_code", { length: 3 })
     .notNull()
     .references(() => currencies.code),
-  initialBalance: decimal("initial_balance", { precision: 12, scale: 2 })
+  adjustedBalance: decimal("adjusted_balance", { precision: 12, scale: 2 })
     .notNull()
     .default("0"),
+  adjustedAt: timestamp("adjusted_at", { withTimezone: true }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })

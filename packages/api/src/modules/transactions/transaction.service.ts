@@ -28,19 +28,22 @@ async function resolveAccountId(
 }
 
 async function assertCategoryMatchesType(
-  categoryId: string,
-  expectedType: "income" | "expense",
+  categoryId: string | undefined,
+  type: "income" | "expense" | "transfer",
   db: Database,
 ): Promise<void> {
+  if (type === "transfer") return;
+  if (!categoryId) throw badRequest("Category is required for income and expense transactions");
+
   const [category] = await db
     .select({ id: categories.id, type: categories.type })
     .from(categories)
     .where(eq(categories.id, categoryId));
 
   if (!category) throw badRequest("Category not found");
-  if (category.type !== expectedType) {
+  if (category.type !== type) {
     throw badRequest(
-      `Category type "${category.type}" does not match transaction type "${expectedType}"`,
+      `Category type "${category.type}" does not match transaction type "${type}"`,
     );
   }
 }
@@ -76,7 +79,7 @@ export async function updateTransaction(
   const existing = await repo.findById(id, db);
   if (!existing) return null;
 
-  if (data.categoryId) {
+  if (data.categoryId !== undefined) {
     await assertCategoryMatchesType(data.categoryId, data.type ?? existing.type, db);
   }
 

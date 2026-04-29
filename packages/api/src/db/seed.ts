@@ -40,7 +40,7 @@ async function seed() {
   if (!existingAccount) {
     const [account] = await db
       .insert(schema.accounts)
-      .values({ name: "Main Account", currencyCode: "EUR", initialBalance: "0" })
+      .values({ name: "Main Account", currencyCode: "EUR", adjustedBalance: "0" })
       .returning();
     console.log(`  ✓ Account created:   "${account!.name}" (id: ${account!.id})`);
   } else {
