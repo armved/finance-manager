@@ -10,7 +10,7 @@ export const createTransactionSchema = z.object({
   amount: monetaryAmountSchema,
   transactionDate: dateStringSchema.optional(),
   accountId: z.string().uuid("Invalid account ID").optional(),
-  categoryId: z.string().uuid("Invalid category ID"),
+  categoryId: z.string().uuid("Invalid category ID").optional(),
   merchantId: z.string().uuid("Invalid merchant ID").nullish(),
   tagIds: z.array(z.string().uuid("Invalid tag ID")).optional(),
 });

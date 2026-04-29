@@ -10,14 +10,14 @@ export interface Transaction {
   amount: number; // Always positive — direction determined by `type`
   transactionDate: string; // YYYY-MM-DD
   accountId: string;
-  categoryId: string;
+  categoryId: string | null; // null for transfers
   merchantId: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface TransactionWithRelations extends Transaction {
-  category: Pick<Category, "id" | "name" | "icon" | "color">;
+  category: Pick<Category, "id" | "name" | "icon" | "color"> | null; // null for transfers
   account: Pick<Account, "id" | "name">;
   merchant: Pick<Merchant, "id" | "name"> | null;
   tags: Pick<Tag, "id" | "name" | "color">[];
