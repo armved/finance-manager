@@ -7,6 +7,7 @@ import { ChevronDown, X } from "lucide-react";
 import { createTransactionSchema } from "@finance-manager/shared";
 import { useCreateTransaction, useUpdateTransaction } from "../../api/transactions";
 import { useCategories } from "../../api/categories";
+import { useAccounts } from "../../api/accounts";
 import { useUIStore } from "../../store/ui";
 
 const formSchema = createTransactionSchema.extend({
@@ -39,6 +40,8 @@ export function TransactionDialog() {
   const isError = isEditing ? updateTx.isError : createTx.isError;
   const errorMessage = isEditing ? updateTx.error?.message : createTx.error?.message;
 
+  const { data: accounts } = useAccounts();
+
   const {
     register,
     handleSubmit,
@@ -54,32 +57,37 @@ export function TransactionDialog() {
       type: "expense",
       transactionDate: today(),
       categoryId: "",
+      accountId: "",
     },
   });
 
   const txType = watch("type");
-  const { data: categories } = useCategories(txType);
+  const { data: categories } = useCategories(txType === "transfer" ? undefined : txType);
 
-  // Keep a ref so the isOpen effect can read the latest categories without depending on them
+  // Keep refs so open/close effects can read latest data without re-triggering
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
+  const accountsRef = useRef(accounts);
+  accountsRef.current = accounts;
 
   // On open: reset to editing data or create defaults
   useEffect(() => {
     if (!isOpen) return;
+    const defaultAccountId = accountsRef.current?.[0]?.id ?? "";
     if (editingTransaction) {
       reset({
         type: editingTransaction.type,
         amount: editingTransaction.amount,
         transactionDate: editingTransaction.transactionDate,
-        categoryId: editingTransaction.categoryId,
+        categoryId: editingTransaction.categoryId ?? "",
+        accountId: editingTransaction.accountId,
       });
     } else {
       const cats = categoriesRef.current;
       const preselectId = preselectedCategoryIdRef.current;
       const preselectedCat = preselectId ? cats?.find((c) => c.id === preselectId) : undefined;
       const defaultCat = preselectedCat ?? cats?.find((c) => c.isDefault) ?? cats?.[0];
-      reset({ type: "expense", transactionDate: today(), categoryId: defaultCat?.id ?? "" });
+      reset({ type: "expense", transactionDate: today(), categoryId: defaultCat?.id ?? "", accountId: defaultAccountId });
     }
   // editingTransaction intentionally omitted: we only want this to run on open/close transitions
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,6 +158,28 @@ export function TransactionDialog() {
                 </div>
               )}
             />
+
+            {/* Account */}
+            {accounts && accounts.length > 0 && (
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                  Account
+                </label>
+                <div className="relative">
+                  <select
+                    {...register("accountId")}
+                    className="w-full appearance-none rounded-lg border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
+                  >
+                    {accounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </div>
+            )}
 
             {/* Amount */}
             <div>

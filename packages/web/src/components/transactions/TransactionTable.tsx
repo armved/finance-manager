@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Pencil, Trash2 } from "lucide-react";
 import type { TransactionWithRelations } from "@finance-manager/shared";
 import { useDeleteTransaction } from "../../api/transactions";
 import { useUIStore } from "../../store/ui";
@@ -15,12 +15,14 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function formatAmount(amount: number, type: "income" | "expense"): string {
+function formatAmount(amount: number, type: "income" | "expense" | "transfer"): string {
   const formatted = amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  return `${type === "income" ? "+" : "-"}€${formatted}`;
+  if (type === "income") return `+€${formatted}`;
+  if (type === "expense") return `-€${formatted}`;
+  return `€${formatted}`;
 }
 
 function SkeletonRow() {
@@ -90,9 +92,13 @@ export function TransactionTable({
           ) : (
             transactions.map((tx) => {
               const name = tx.merchant?.name ?? "Transaction";
-              const categoryColor = tx.category.color || DEFAULT_EXPENSE_CATEGORY.color;
+              const isTransfer = tx.type === "transfer";
+              const categoryColor = tx.category?.color || DEFAULT_EXPENSE_CATEGORY.color;
               const isIncome = tx.type === "income";
-              const IconComp = getIconComponent(tx.category.icon) ?? DEFAULT_EXPENSE_CATEGORY.icon;
+              const IconComp = isTransfer
+                ? ArrowLeftRight
+                : (getIconComponent(tx.category?.icon) ?? DEFAULT_EXPENSE_CATEGORY.icon);
+              const categoryName = isTransfer ? "Transfer" : (tx.category?.name ?? "Uncategorized");
 
               return (
                 <tr
@@ -110,7 +116,7 @@ export function TransactionTable({
                       </div>
                       <div className="flex min-w-0 flex-col gap-0.5">
                         <span className="text-sm font-semibold leading-tight text-foreground">
-                          {tx.category.name}
+                          {categoryName}
                         </span>
                         <span className="truncate text-xs leading-tight text-muted-foreground">
                           {name}

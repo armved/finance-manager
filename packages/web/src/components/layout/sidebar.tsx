@@ -12,9 +12,12 @@ import {
   Receipt,
   Wallet,
 } from "lucide-react";
+import { useAccounts } from "../../api/accounts";
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const { data: accounts } = useAccounts();
+  const netWorth = accounts?.reduce((sum, a) => sum + a.balance, 0) ?? null;
 
   return (
     <aside
@@ -86,7 +89,15 @@ export function Sidebar() {
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Net Worth
           </p>
-          <p className="text-xl font-bold text-foreground">$12,847.32</p>
+          <p className="text-xl font-bold text-foreground">
+            {netWorth === null ? (
+              <span className="inline-block h-6 w-24 animate-pulse rounded bg-surface-raised" />
+            ) : (
+              <>
+                {netWorth < 0 ? "-" : ""}€{Math.abs(netWorth).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </>
+            )}
+          </p>
           <div className="mt-1 flex items-center gap-1 text-muted-foreground">
             <ChevronsUpDown className="h-3 w-3" />
             <span className="text-xs">All Accounts</span>

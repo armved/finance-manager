@@ -1,0 +1,21 @@
+meta {
+  name: Adjust Balance
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/accounts/:id/adjust-balance
+  body: json
+  auth: none
+}
+
+params:path {
+  id: <account-id>
+}
+
+body:json {
+  {
+    "balance": 842.50
+  }
+}

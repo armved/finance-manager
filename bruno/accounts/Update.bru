@@ -1,0 +1,21 @@
+meta {
+  name: Update Account
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/accounts/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: <account-id>
+}
+
+body:json {
+  {
+    "name": "Visa Platinum"
+  }
+}
