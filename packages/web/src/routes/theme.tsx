@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PageHeader } from "../components/layout/top-bar";
 
 export const Route = createFileRoute("/theme")({
   component: ThemeShowcase,
@@ -97,14 +98,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ThemeShowcase() {
   return (
+    <>
+      <PageHeader title="Theme" />
     <div className="flex-1 overflow-y-auto">
     <div className="space-y-10 px-8 py-8 max-w-4xl">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Theme</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Active theme: <span className="font-mono">dark.css</span>
-        </p>
-      </div>
 
       <Section title="Primitive scales">
         <div className="space-y-1.5">
@@ -168,5 +165,6 @@ function ThemeShowcase() {
       </Section>
     </div>
     </div>
+    </>
   );
 }
