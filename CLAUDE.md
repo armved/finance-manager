@@ -61,11 +61,11 @@ This is a **pnpm monorepo** with three packages under `packages/`:
 - Categories are self-referencing (`parent_id`) for infinite hierarchy; PostgreSQL recursive CTEs are used to query the full tree.
 - Each transaction type (`income`, `expense`) has exactly one default category with `is_default = true` (seed: "Uncategorized" for both). There is no `any` category type. `transfer` has no category.
 - Default currency is **EUR**.
-- Account balance is **computed on the fly, never stored**. `initial_balance` does not exist — accounts have a single `adjusted_balance` (decimal, not null, default 0) and `adjusted_at` (date, nullable):
-  - Formula: `adjusted_balance + SUM(signed amounts WHERE adjusted_at IS NULL OR transaction_date > adjusted_at)`
+- Account balance is **computed on the fly, never stored**. `initial_balance` does not exist — accounts have a single `adjusted_balance` (decimal, not null, default 0) and `adjusted_at` (timestamptz, nullable):
+  - Formula: `adjusted_balance + SUM(signed amounts WHERE adjusted_at IS NULL OR created_at > adjusted_at)`
   - Balance includes all transaction types (`income`, `expense`, `transfer`) so transfers correctly shift money between accounts.
   - On account creation the user sets a starting balance → stored as `adjusted_balance`, `adjusted_at` stays null.
-  - "Adjust Balance" sets both `adjusted_balance` and `adjusted_at = today`. No transaction is created. Analytics are unaffected.
+  - "Adjust Balance" stores the exact timestamp of adjustment. Transactions entered after that moment count on top; those entered before are absorbed into `adjusted_balance`. No transaction is created. Analytics are unaffected.
 
 ### AI adapter pattern (v2+)
 

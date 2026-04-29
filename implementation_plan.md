@@ -392,7 +392,7 @@ Single endpoint that returns everything the dashboard needs in one request.
 
 > *"You have real accounts (Visa, Mastercard, cash) with live balances that follow your tracked transactions — plus a manual adjustment escape hatch for when reality drifts."*
 
-#### Step 10.1 — Account API (~45 min)
+#### ✅ Step 10.1 — Account API (~45 min)
 
 **Schema changes:**
 
@@ -410,9 +410,9 @@ adjusted_balance + SUM(signed amounts WHERE adjusted_at IS NULL OR transaction_d
 ```
 Includes all types — transfers shift money between accounts. Analytics always filter `WHERE type IN ('income', 'expense')`.
 
-- [ ] Generate and run Drizzle migrations for all three schema changes above
-- [ ] Update `packages/shared` types and Zod schemas: `transactionTypeEnum` gains `'transfer'`, account schema replaces `initialBalance` with `adjustedBalance` + `adjustedAt`, `categoryId` becomes optional on transaction create/update
-- [ ] Create `src/modules/accounts/`:
+- [x] Generate and run Drizzle migrations for all three schema changes above
+- [x] Update `packages/shared` types and Zod schemas: `transactionTypeEnum` gains `'transfer'`, account schema replaces `initialBalance` with `adjustedBalance` + `adjustedAt`, `categoryId` becomes optional on transaction create/update
+- [x] Create `src/modules/accounts/`:
   - `account.repository.ts`:
     - `findAll()` — returns all active accounts with computed balance (SQL aggregate)
     - `findById(id)` — single account with computed balance
@@ -427,27 +427,27 @@ Includes all types — transfers shift money between accounts. Analytics always 
     - `PUT /api/accounts/:id`
     - `POST /api/accounts/:id/adjust-balance` — body: `{ balance: number }`
     - `DELETE /api/accounts/:id`
-- [ ] Register routes in `app.ts`
-- [ ] Update seed: replace `initialBalance` with `adjustedBalance: 0` on the default account
-- [ ] Add Bruno request files in `bruno/accounts/`
-- [ ] Test: create two accounts, add transactions (including one transfer leg manually), verify balance math, then adjust and verify again
+- [x] Register routes in `app.ts`
+- [x] Update seed: replace `initialBalance` with `adjustedBalance: 0` on the default account
+- [x] Add Bruno request files in `bruno/accounts/`
+- [x] Test: create two accounts, add transactions (including one transfer leg manually), verify balance math, then adjust and verify again
 
 **Win:** `GET /api/accounts` returns each account with its real computed balance.
 
 ---
 
-#### Step 10.2 — Accounts UI + transaction account selector (~60 min)
+#### ✅ Step 10.2 — Accounts UI + transaction account selector (~60 min)
 
-- [ ] Create `src/api/accounts.ts`:
+- [x] Create `src/api/accounts.ts`:
   - Export `accountsQueryKey`
   - `useAccounts()`, `useCreateAccount()`, `useUpdateAccount()`, `useAdjustBalance()`, `useDeleteAccount()`
-- [ ] Build out the `/accounts` route (currently a stub):
+- [x] Build out the `/accounts` route (currently a stub):
   - One card per account: name, currency, live balance
   - "Add Account" → `AccountDialog` (name, currency, initial balance)
   - Edit button → same dialog pre-filled
   - **"Adjust Balance"** → simple dialog: *"My [Visa] currently has…"* number input → calls `adjustBalance` — no transaction is created
   - Deactivate button (with confirmation)
-- [ ] Add account selector to `TransactionDialog`:
+- [x] Add account selector to `TransactionDialog`:
   - Required field, shown as a dropdown
   - Defaults to the first active account (or the one selected in context)
   - Invalidates `accountsQueryKey` on transaction mutation so balances stay live
@@ -469,7 +469,23 @@ Includes all types — transfers shift money between accounts. Analytics always 
 
 ---
 
-### M11: Dashboard Enhancements
+### M11: Multi-Currency Net Worth
+
+> *"Net worth is currently calculated by summing all account balances directly, assuming the same currency. This is **incorrect** when accounts have different currencies."*
+
+> [!WARNING]
+> **Known limitation:** The sidebar Net Worth value sums all account balances without currency conversion. If you have accounts in different currencies (e.g. EUR + USD), the displayed total will be wrong. This must be fixed before the app is used with multi-currency accounts.
+
+#### Step 11.0 — Currency conversion for net worth (~90 min)
+
+- [ ] Add an exchange rates source (e.g. store manual rates in a `exchange_rates` table, or integrate a free API like Open Exchange Rates)
+- [ ] Add `GET /api/exchange-rates` endpoint returning current rates relative to a base currency (EUR)
+- [ ] Update the net worth calculation: convert each account balance to the base currency before summing
+- [ ] Update sidebar to show the base currency symbol and a tooltip listing per-account breakdown
+
+---
+
+### M12: Dashboard Enhancements
 
 > *"Richer stats — income breakdown and month-over-month comparison."*
 
