@@ -1,14 +1,16 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { createTransactionSchema } from "@finance-manager/shared";
 import { useCreateTransaction, useUpdateTransaction } from "../../api/transactions";
 import { useCategories } from "../../api/categories";
 import { useAccounts } from "../../api/accounts";
 import { useUIStore } from "../../store/ui";
+import { CategoryPicker, resolveCategoryDisplay } from "./CategoryPicker";
+import { getIconComponent } from "../../lib/category-icons";
 
 const formSchema = createTransactionSchema.extend({
   categoryId: z
@@ -25,6 +27,8 @@ function today(): string {
 }
 
 export function TransactionDialog() {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   const isOpen = useUIStore((s) => s.isAddTransactionOpen);
   const editingTransaction = useUIStore((s) => s.editingTransaction);
   const preselectedCategoryId = useUIStore((s) => s.preselectedCategoryId);
@@ -72,7 +76,10 @@ export function TransactionDialog() {
 
   // On open: reset to editing data or create defaults
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setPickerOpen(false);
+      return;
+    }
     const defaultAccountId = accountsRef.current?.[0]?.id ?? "";
     if (editingTransaction) {
       reset({
@@ -129,146 +136,203 @@ export function TransactionDialog() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Type toggle */}
-            <Controller
-              name="type"
-              control={control}
-              render={({ field }) => (
-                <div className="flex rounded-lg border border-border bg-background p-1">
-                  {(["expense", "income"] as const).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => {
-                        if (field.value === t) return;
-                        field.onChange(t);
-                        setValue("categoryId", ""); // clear so auto-default kicks in for new type
-                      }}
-                      className={`flex-1 cursor-pointer rounded-md py-1.5 text-sm font-medium capitalize transition-colors ${
-                        field.value === t
-                          ? t === "expense"
-                            ? "bg-expense/15 text-expense"
-                            : "bg-income/15 text-income"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              )}
-            />
+            {!pickerOpen && (
+              <>
+                {/* Type toggle */}
+                <Controller
+                  name="type"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex rounded-lg border border-border bg-background p-1">
+                      {(["expense", "income"] as const).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => {
+                            if (field.value === t) return;
+                            field.onChange(t);
+                            setValue("categoryId", ""); // clear so auto-default kicks in for new type
+                          }}
+                          className={`flex-1 cursor-pointer rounded-md py-1.5 text-sm font-medium capitalize transition-colors ${
+                            field.value === t
+                              ? t === "expense"
+                                ? "bg-expense/15 text-expense"
+                                : "bg-income/15 text-income"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
 
-            {/* Account */}
-            {accounts && accounts.length > 0 && (
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                  Account
-                </label>
-                <div className="relative">
-                  <select
-                    {...register("accountId")}
-                    className="w-full appearance-none rounded-lg border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
-                  >
-                    {accounts.map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                {/* Account */}
+                {accounts && accounts.length > 0 && (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                      Account
+                    </label>
+                    <div className="relative">
+                      <select
+                        {...register("accountId")}
+                        className="w-full appearance-none rounded-lg border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
+                      >
+                        {accounts.map((acc) => (
+                          <option key={acc.id} value={acc.id}>
+                            {acc.name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Amount */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                    Amount
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                      €
+                    </span>
+                    <input
+                      {...register("amount", { valueAsNumber: true })}
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      placeholder="0.00"
+                      className="w-full rounded-lg border border-border bg-background py-2 pl-7 pr-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                  {errors.amount && (
+                    <p className="mt-1 text-xs text-expense">{errors.amount.message}</p>
+                  )}
                 </div>
-              </div>
+
+                {/* Date */}
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                    Date
+                  </label>
+                  <input
+                    {...register("transactionDate")}
+                    type="date"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none scheme-dark"
+                  />
+                  {errors.transactionDate && (
+                    <p className="mt-1 text-xs text-expense">
+                      {errors.transactionDate.message}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
 
-            {/* Amount */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Amount
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  €
-                </span>
-                <input
-                  {...register("amount", { valueAsNumber: true })}
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  placeholder="0.00"
-                  className="w-full rounded-lg border border-border bg-background py-2 pl-7 pr-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
-                />
-              </div>
-              {errors.amount && (
-                <p className="mt-1 text-xs text-expense">{errors.amount.message}</p>
-              )}
-            </div>
-
-            {/* Date */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Date
-              </label>
-              <input
-                {...register("transactionDate")}
-                type="date"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none scheme-dark"
-              />
-              {errors.transactionDate && (
-                <p className="mt-1 text-xs text-expense">
-                  {errors.transactionDate.message}
-                </p>
-              )}
-            </div>
-
             {/* Category */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                Category
-              </label>
-              <div className="relative">
-                <select
-                  {...register("categoryId")}
-                  className="w-full appearance-none rounded-lg border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground focus:border-primary focus:outline-none"
-                >
-                  {categories?.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.icon ? `${cat.icon} ` : ""}
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              </div>
-              {errors.categoryId && (
-                <p className="mt-1 text-xs text-expense">
-                  {errors.categoryId.message}
-                </p>
-              )}
-            </div>
+            <Controller
+              name="categoryId"
+              control={control}
+              render={({ field }) => {
+                const display = categories
+                  ? resolveCategoryDisplay(categories, field.value)
+                  : null;
+                const IconComp = display ? getIconComponent(display.icon) : null;
+                return (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                      Category
+                    </label>
+                    {pickerOpen && categories ? (
+                      <CategoryPicker
+                        categories={categories}
+                        selectedId={field.value}
+                        onSelect={(id) => {
+                          field.onChange(id);
+                          setPickerOpen(false);
+                        }}
+                        onCancel={() => setPickerOpen(false)}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setPickerOpen(true)}
+                        className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2 text-left transition-colors hover:border-primary/50"
+                      >
+                        {display ? (
+                          <>
+                            <span
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+                              style={{
+                                background: `${display.color}20`,
+                                color: display.color,
+                              }}
+                            >
+                              {IconComp ? <IconComp className="h-3.5 w-3.5" /> : null}
+                            </span>
+                            <span className="flex min-w-0 flex-1 flex-col">
+                              <span className="text-sm font-medium text-foreground">
+                                {display.name}
+                              </span>
+                              {display.path.length > 1 && (
+                                <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
+                                  {display.path.slice(0, -1).map((seg, i) => (
+                                    <span key={i} className="flex items-center gap-0.5">
+                                      {i > 0 && <ChevronRight className="h-2.5 w-2.5" />}
+                                      {seg}
+                                    </span>
+                                  ))}
+                                </span>
+                              )}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-sm text-muted-foreground/60">
+                            Choose category…
+                          </span>
+                        )}
+                        <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+                      </button>
+                    )}
+                    {errors.categoryId && !pickerOpen && (
+                      <p className="mt-1 text-xs text-expense">
+                        {errors.categoryId.message}
+                      </p>
+                    )}
+                  </div>
+                );
+              }}
+            />
 
             {/* Actions */}
-            <div className="flex gap-3 pt-1">
-              <button
-                type="button"
-                onClick={close}
-                className="flex-1 cursor-pointer rounded-lg border border-border py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="flex-1 cursor-pointer rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isPending ? "Saving…" : isEditing ? "Save Changes" : "Add Transaction"}
-              </button>
-            </div>
+            {!pickerOpen && (
+              <>
+                <div className="flex gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={close}
+                    className="flex-1 cursor-pointer rounded-lg border border-border py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isPending}
+                    className="flex-1 cursor-pointer rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isPending ? "Saving…" : isEditing ? "Save Changes" : "Add Transaction"}
+                  </button>
+                </div>
 
-            {isError && (
-              <p className="text-center text-xs text-expense">
-                {errorMessage ?? "Something went wrong. Please try again."}
-              </p>
+                {isError && (
+                  <p className="text-center text-xs text-expense">
+                    {errorMessage ?? "Something went wrong. Please try again."}
+                  </p>
+                )}
+              </>
             )}
           </form>
         </Dialog.Content>

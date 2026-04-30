@@ -18,5 +18,6 @@ export const CATEGORY_PALETTE = [
 
 export const DEFAULT_EXPENSE_CATEGORY = {
     icon: ShoppingBag,
+    iconId: "shopping-bag",
     color: "#6B7280",
 }
