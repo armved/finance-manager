@@ -21,7 +21,7 @@
 |-----|-----------|------|----------|
 | **Act 1: Get It Running** | M1 → M3 | Empty repo → API + Web + Database all talking to each other | ~4 sessions |
 | **Act 2: Make It Usable** | M4 → M10 | Add transactions, categorize, view stats, manage accounts | ~10 sessions |
-| **Act 3: Make It Good** | M11 → M15 | Merchants, tags, category trees, polish, deploy to Pi | ~9 sessions |
+| **Act 3: Make It Good** | M11 → M17 | Merchants, category trees, dashboard stats, transfers, polish, deploy | ~10 sessions |
 
 > [!IMPORTANT]
 > **Your "I won't quit" milestone is at the end of Act 2 (M8).** After that, you have a working personal finance tracker with monthly stats. Everything in Act 3 is bonus. Optimize for reaching M8 as fast as possible.
@@ -463,188 +463,207 @@ Includes all types — transfers shift money between accounts. Analytics always 
 
 ## Act 3: Make It Good ✨
 
-> **Goal:** Add the nice-to-haves that make the app feel complete.
-> **Sessions needed:** ~8
-> **Every milestone here is independent.** Do them in any order. Skip any you don't care about.
+> **Goal:** Add the features that make the app feel complete and genuinely polished.
+> **Sessions needed:** ~10
+> **Milestones M11–M13 should be done in order. M14–M18 are independent after that.**
+
+> **Decision log — M11/M12/M13 order:** Categories answer *what kind* of spending. Merchants answer *where*. Tags answer *which project/event*. They are three orthogonal dimensions, not duplicates. No `description` free-text field — structured fields only. Priority order decided: subcategories → merchants → tags.
 
 ---
 
-### M11: Multi-Currency Net Worth
+### M11: Category Hierarchy
 
-> *"Net worth is currently calculated by summing all account balances directly, assuming the same currency. This is **incorrect** when accounts have different currencies."*
+> *"Categories can have subcategories, infinitely nested. Food > Groceries > Organic."*
 
-> [!WARNING]
-> **Known limitation:** The sidebar Net Worth value sums all account balances without currency conversion. If you have accounts in different currencies (e.g. EUR + USD), the displayed total will be wrong. This must be fixed before the app is used with multi-currency accounts.
+#### Step 11.1 — Recursive category tree API (~60 min)
 
-#### Step 11.0 — Currency conversion for net worth (~90 min)
+- [ ] Update `category.repository.ts`:
+  - `findTree()` — PostgreSQL recursive CTE returning full tree:
+    ```sql
+    WITH RECURSIVE category_tree AS (
+      SELECT *, 0 AS depth FROM categories WHERE parent_id IS NULL
+      UNION ALL
+      SELECT c.*, ct.depth + 1
+      FROM categories c JOIN category_tree ct ON c.parent_id = ct.id
+    )
+    SELECT * FROM category_tree ORDER BY depth, name;
+    ```
+  - Service layer flattens rows → nested objects
+  - `create(data)` accepts optional `parentId`
+  - `move(id, newParentId)` with cycle detection
+- [ ] Update `GET /api/categories` to return the nested tree
+- [ ] Update shared types: `Category` gains optional `children: Category[]` and `parentId`
 
-- [ ] Add an exchange rates source (e.g. store manual rates in a `exchange_rates` table, or integrate a free API like Open Exchange Rates)
-- [ ] Add `GET /api/exchange-rates` endpoint returning current rates relative to a base currency (EUR)
-- [ ] Update the net worth calculation: convert each account balance to the base currency before summing
-- [ ] Update sidebar to show the base currency symbol and a tooltip listing per-account breakdown
+**Win:** API returns nested tree. Existing flat usage still works (children defaults to `[]`).
 
 ---
 
-### M12: Dashboard Enhancements
+#### Step 11.2 — Category management UI (~60–90 min)
+
+- [ ] Build a category management panel (accessible from sidebar or settings):
+  - Collapsible tree view with indentation
+  - Inline "Add subcategory" on each row
+  - Edit name / change color-icon / delete (with reassign prompt if transactions exist)
+- [ ] Update `TransactionDialog` category selector:
+  - Render as indented grouped list (e.g. `Food › Groceries`) rather than a flat `<select>`
+
+**Win:** Visual category tree. You can nest, rename, and reorganize without touching the API directly.
+
+---
+
+### M12: Merchants
+
+> *"Transactions have a merchant (where you spent) — ~20 structured entries with autocomplete."*
+
+#### Step 12.1 — Merchant CRUD API (~30 min)
+
+- [ ] Create `src/modules/merchants/`:
+  - `merchant.repository.ts`: `findAll()`, `search(q)`, `create(name)`, `update(id, name)`, `delete(id)`
+  - `merchant.routes.ts`: `GET /api/merchants?q=` (autocomplete), `POST`, `PUT /:id`, `DELETE /:id`
+- [ ] Update `transaction.service.ts` + `transaction.repository.ts`:
+  - Accept optional `merchantId` on create/update
+  - Include merchant name in the list/findById response
+- [ ] Update shared schemas: add optional `merchantId` to `createTransactionSchema`
+- [ ] Add Bruno request files in `bruno/merchants/`
+
+**Win:** `POST /api/transactions` now accepts a merchant. The list response includes the merchant name.
+
+---
+
+#### Step 12.2 — Merchant autocomplete UI (~45 min)
+
+- [ ] Add to `TransactionDialog`:
+  - **Merchant**: text input with live autocomplete dropdown — type to search existing merchants, press Enter or click to create new inline (no separate management screen needed)
+- [ ] Update `TransactionTable` rows to show merchant name below the category badge
+
+**Win:** Type "Lidl" → it appears or is created on the fly. Merchant shows on every transaction row.
+
+---
+
+### M13: Tags
+
+> *"Tag transactions with cross-cutting labels like 'vacation' or 'home renovation' to track project spending."*
+
+#### Step 13.1 — Tag CRUD API (~30 min)
+
+- [ ] Create `src/modules/tags/`:
+  - `tag.repository.ts`: `findAll()`, `search(q)`, `create(name)`, `update(id, name)`, `delete(id)`
+  - `tag.routes.ts`: `GET /api/tags?q=`, `POST`, `PUT /:id`, `DELETE /:id`
+- [ ] Update `transaction.service.ts` + `transaction.repository.ts`:
+  - Accept optional `tagIds[]` on create/update
+  - Include tag names in the list/findById response
+- [ ] Update shared schemas: add optional `tagIds` to `createTransactionSchema`
+- [ ] Add Bruno request files in `bruno/tags/`
+
+**Win:** `POST /api/transactions` now accepts tags. The list response includes tag names.
+
+---
+
+#### Step 13.2 — Tags UI (~45 min)
+
+- [ ] Add to `TransactionDialog`:
+  - **Tags**: multi-select pill input — type to search, select or create inline
+- [ ] Update `TransactionTable` rows to show tag badges
+
+**Win:** Tag a transaction "vacation" → see the pill on every matching row. Filter or total by tag later.
+
+---
+
+### M14: Dashboard Enhancements
 
 > *"Richer stats — income breakdown and month-over-month comparison."*
 
-#### Step 11.1 — Income breakdown toggle (~30 min)
+#### Step 14.1 — Income breakdown toggle (~30 min)
 
 - [ ] Add `incomeByCategory` array to `GET /api/analytics/dashboard` response (same shape as `expensesByCategory`)
-- [ ] Add an Expense / Income toggle to the `ExpensesByCategory` dashboard card — switches the grid and donut between the two breakdowns
+- [ ] Add Expense / Income toggle to the `ExpensesByCategory` card — switches chart and grid between the two
 
-#### Step 11.2 — vs last month comparison (~30 min)
-
-- [ ] Extend `GET /api/analytics/dashboard` to also accept a comparison period (or compute it server-side from the same `start`/`end`)
-- [ ] Re-add the `% vs last month` row to each `SummaryCards` card, driven by real API data
+**Win:** One click to flip the chart from "where did money go" to "where did money come from".
 
 ---
 
-### M12: Category Hierarchy (Tree)
+#### Step 14.2 — vs last month on summary cards (~30 min)
 
-> *"Categories can have subcategories, infinitely nested."*
+- [ ] Compute previous-period totals server-side in `analytics.repository.ts` (shift date range back one month)
+- [ ] Add `previousIncome` and `previousExpenses` to the dashboard response
+- [ ] Re-add the `% vs last month` line to each `SummaryCard` (was removed earlier pending real data)
 
-#### Step 12.1 — Recursive category tree API (~60 min)
-
-- [ ] Update `category.repository.ts`:
-  - `findTree()` — use PostgreSQL recursive CTE:
-    ```sql
-    WITH RECURSIVE category_tree AS (
-      SELECT *, 0 as depth FROM categories WHERE parent_id IS NULL
-      UNION ALL
-      SELECT c.*, ct.depth + 1
-      FROM categories c
-      JOIN category_tree ct ON c.parent_id = ct.id
-    )
-    SELECT * FROM category_tree ORDER BY depth, sort_order;
-    ```
-  - Build the tree structure in the service layer (flat rows → nested objects)
-  - `move(id, newParentId)` — update parent_id with cycle detection
-- [ ] Update `GET /api/categories` to return the tree structure
-
-**Win:** API returns a nested tree. Categories like `Food > Groceries > Organic` work.
+**Win:** Summary cards show `↑ 12% vs last month` driven by real numbers.
 
 ---
 
-#### Step 12.2 — Category tree UI (~60–90 min)
+### M15: Transfer UI
 
-- [ ] Create `src/components/categories/CategoryTree.tsx`:
-  - Collapsible tree view with indentation
-  - Click arrow to expand/collapse children
-  - "Add subcategory" option on each category's context menu
-- [ ] Update the transaction form's category selector:
-  - Show as a tree dropdown (indented names, e.g., `Food > Groceries`)
+> *"Move money between accounts from the UI — no manual two-transaction hack."*
 
-**Win:** Visual category tree with collapsible hierarchy. Clean and satisfying to interact with.
+#### Step 15.1 — Transfer creation (~60 min)
 
----
+- [ ] Add "Transfer" as a third type option in `TransactionDialog` (alongside Income / Expense)
+- [ ] When Transfer is selected, show a second account selector ("To account") and hide the category field
+- [ ] On submit: call a new `POST /api/transfers` endpoint that atomically creates both legs and links them via the `transfers` table
+- [ ] Update `TransactionTable` to render transfer rows cleanly (arrow icon, "→ Account Name", neutral amount color)
+- [ ] Invalidate `accountsQueryKey` so both account balances update instantly
 
-### M13: Merchants & Tags
-
-> *"Transactions can have a merchant and multiple tags."*
-
-#### Step 13.1 — Merchant & Tag CRUD API (~45 min)
-
-- [ ] Create `src/modules/merchants/`:
-  - CRUD + search endpoint (`GET /api/merchants?q=ama` for autocomplete)
-- [ ] Create `src/modules/tags/`:
-  - CRUD + search endpoint
-- [ ] Update transaction create/update to accept `merchantId` and `tagIds`
-- [ ] Update transaction list response to include merchant name and tag names
-
-**Win:** Transactions can now carry merchant and tag data.
+**Win:** Select Transfer, pick source and destination accounts, enter amount — both balances update immediately.
 
 ---
 
-#### Step 13.2 — Autocomplete UI in transaction form (~60 min)
+### M16: Transaction Period Filter
 
-- [ ] Add to `TransactionDialog`:
-  - **Merchant**: text input with autocomplete — type to search existing merchants, create new inline
-  - **Tags**: multi-select — search and select multiple tags, create new inline
-- [ ] Update `TransactionList` to show merchant name and tag badges on each row
+> *"The transactions page shows everything ever. Add a month picker so you can scope it."*
 
-**Win:** When adding a transaction, type "Amazon" → select or create the merchant → add tags like "electronics", "personal". Feels professional.
+#### Step 16.1 — Month picker on transactions page (~30 min)
 
----
+- [ ] Add the same month nav control (← April 2026 →) to the transactions page controls row — driven by URL search params just like the dashboard
+- [ ] Wire the selected month's date range into `useTransactions()` so only that month's transactions load
+- [ ] The existing All / Income / Expense type filter pills continue to work within the selected period
 
-### M14: Filters & Enhanced List
-
-> *"You can filter transactions by date, category, type, merchant, tag."*
-
-#### Step 14.1 — Transaction filters UI (~60–90 min)
-
-- [ ] Add a filter bar above the transaction list:
-  - Date range picker (start date – end date, using `<input type="date">`)
-  - Category dropdown
-  - Type filter (All / Income / Expense)
-- [ ] Filters update URL search params (TanStack Router) → page is shareable/bookmarkable
-- [ ] Filters are passed to `useTransactions()` → API filters the results
-- [ ] Show active filter count badge on a "Filters" button
-
-**Win:** Filter your transactions by any dimension. "Show me all expenses in March" — done.
+**Win:** Transactions page behaves like the dashboard — scoped to a month, navigable with arrows.
 
 ---
 
-### M15: Polish & Deploy 🚀
+### M17: Multi-Currency Net Worth
+
+> *"Net worth is currently wrong if you have accounts in different currencies."*
+
+> [!WARNING]
+> **Known limitation:** The sidebar sums all account balances directly. If you have EUR + USD accounts the total is meaningless. Fix this before using multi-currency accounts seriously.
+
+#### Step 17.1 — Currency conversion for net worth (~90 min)
+
+- [ ] Add a `exchange_rates` table (manual rates, e.g. `{ fromCode, toCode, rate, updatedAt }`)
+- [ ] Add `GET /api/exchange-rates` and `PUT /api/exchange-rates` (to update rates manually)
+- [ ] Update net worth query: convert each account balance to EUR before summing
+- [ ] Update sidebar: show converted total + a tooltip listing each account's native balance
+
+**Win:** Net worth is accurate even with mixed-currency accounts.
+
+---
+
+### M18: Polish & Deploy 🚀
 
 > *"Responsive, error-handled, and running on your Raspberry Pi."*
 
-#### Step 15.1 — UX Polish (~60 min)
+#### Step 18.1 — UX Polish (~60 min)
 
-- [ ] **Toast notifications**: build a simple toast system (or use `sonner` — `pnpm add sonner`) for success/error feedback on all mutations
-- [ ] **Loading states**: skeleton loaders on lists and dashboard cards
-- [ ] **Empty states**: friendly messages when no data exists (already partially done on dashboard)
-- [ ] **Error boundaries**: catch and display API errors gracefully
-- [ ] **Responsive design**: test on mobile viewport, ensure sidebar collapses, forms are usable on small screens
+- [ ] **Toast notifications**: use `sonner` (`pnpm add sonner`) for success/error feedback on all mutations
+- [ ] **Error boundaries**: catch and display API errors gracefully instead of blank screens
+- [ ] **Responsive design**: test on mobile viewport — sidebar collapses, dialogs usable on small screens
 
-**Win:** The app feels polished. No janky loading, no cryptic errors, works on your phone's browser.
+**Win:** The app feels polished. No janky errors, works on your phone's browser.
 
 ---
 
-#### Step 15.2 — Docker Compose for Raspberry Pi (~60 min)
+#### Step 18.2 — Docker Compose for Raspberry Pi (~60 min)
 
-- [ ] Create a `Dockerfile` for the API:
-  - Multi-stage build: build TypeScript → run with Node
-  - Include migration + seed as part of startup
-- [ ] Create a `Dockerfile` for the Web:
-  - Build the Vite static bundle → served by Caddy (see below)
-- [ ] Update `docker-compose.yml`:
-  ```yaml
-  services:
-    db:
-      image: postgres:16
-      # ... (existing config)
-    api:
-      build: ./packages/api
-      depends_on: [db]
-      environment:
-        DATABASE_URL: postgresql://finance:finance@db:5432/finance_manager
-    caddy:
-      image: caddy:2
-      ports:
-        - "80:80"
-        - "443:443"
-      volumes:
-        - ./Caddyfile:/etc/caddy/Caddyfile
-        - caddy_data:/data
-      depends_on: [api]
-  volumes:
-    caddy_data:
-  ```
-- [ ] Create `Caddyfile` in repo root:
-  ```
-  your-domain-or-ddns {
-      reverse_proxy /api/* api:3001
-      root * /srv
-      file_server
-  }
-  ```
-- [ ] Configure port forwarding on your router: ports 80 + 443 → Pi's local IP
-- [ ] Set up a free DDNS hostname (e.g. DuckDNS) so your Pi is reachable from mobile data
-- [ ] Run `docker compose up --build` → entire app runs in containers, HTTPS handled automatically by Caddy
+- [ ] Create a `Dockerfile` for the API (multi-stage: build TS → run with Node, migrations on startup)
+- [ ] Create a `Dockerfile` for the Web (Vite build → served by Caddy)
+- [ ] Update `docker-compose.yml` to add `api` and `caddy` services alongside `db`
+- [ ] Create `Caddyfile`: reverse-proxy `/api/*` to the API, serve static files for everything else
+- [ ] Configure port forwarding (80 + 443 → Pi's local IP) and a free DDNS hostname (e.g. DuckDNS)
+- [ ] Run `docker compose up --build` on the Pi
 
-**Win:** `docker compose up` on your Raspberry Pi → open `http://<pi-ip>` on your phone → full app, tracked finances, charts. **Project complete.** 🏆
+**Win:** `docker compose up` on your Raspberry Pi → open the app on your phone over HTTPS. **Project complete.** 🏆
 
 ---
 
@@ -654,11 +673,19 @@ Can't decide what to do today? Use this:
 
 | I have... | Do this | Milestone |
 |-----------|---------|-----------|
-| 45 min | Step 10.1 (account API + balance formula) | M10 |
-| 60-90 min | Step 10.2 (accounts UI + transaction account selector) | M10 |
-| Feeling lazy | Step 15.1 — add toasts and loading states (polish is easy dopamine) | M15 |
+| 60 min | Category tree API | M11.1 |
+| 60-90 min | Category tree UI | M11.2 |
+| 30 min | Merchant API | M12.1 |
+| 45 min | Merchant autocomplete UI | M12.2 |
+| 30 min | Tag API | M13.1 |
+| 45 min | Tags UI | M13.2 |
+| 30 min | Income breakdown toggle | M14.1 |
+| 30 min | vs last month on summary cards | M14.2 |
+| 60 min | Transfer UI | M15 |
+| 30 min | Month picker on transactions page | M16 |
+| Feeling lazy | Toasts + error boundaries (easy dopamine) | M18.1 |
 
-**Where you are right now:** M10 is next. Start there.
+**Where you are right now:** M11 is next. Start with the category tree API.
 
 ---
 
@@ -667,7 +694,7 @@ Can't decide what to do today? Use this:
 1. **One session = one step.** Don't try to do two steps. If you finish early, take the win and stop.
 2. **Always commit after a win.** `git add . && git commit -m "M4.1: Transaction CRUD API works"`. Seeing the git log grow is motivating.
 3. **If you're stuck > 15 minutes, ask for help.** Don't spiral. Ping me (or ChatGPT, or Stack Overflow). Stuck = abandoned.
-4. **Skip Act 3 milestones freely.** M9-M13 are independent. Do whichever sounds fun today. Or don't. The app works without them.
+4. **Skip Act 3 milestones freely.** M14–M17 are independent. Do whichever sounds fun today. Or don't. The app works without them.
 5. **Never refactor during a feature session.** Write it ugly, make it work, commit. Refactor is a separate session (or never).
 
 ---

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, Pencil, Plus, SlidersHorizontal, X } from "lucide-react";
 import type { Category } from "@finance-manager/shared";
 import { DEFAULT_EXPENSE_CATEGORY } from "../../lib/category-meta";
 import { getIconComponent } from "../../lib/category-icons";
@@ -17,6 +17,100 @@ export interface CategoryAmount {
 export interface ExpensesByCategoryProps {
   total: number;
   categories: readonly CategoryAmount[];
+}
+
+interface CategoryCellProps {
+  cat: Category;
+  amount: number;
+  editMode: boolean;
+  onEdit: (cat: Category) => void;
+  onDelete: (cat: Category) => void;
+  onAdd: (categoryId: string) => void;
+}
+
+function CategoryCell({ cat, amount, editMode, onEdit, onDelete, onAdd }: CategoryCellProps) {
+  const [addHovered, setAddHovered] = useState(false);
+  const [bodyHovered, setBodyHovered] = useState(false);
+
+  const IconComp = getIconComponent(cat.icon) ?? DEFAULT_EXPENSE_CATEGORY.icon;
+  const color = cat.color ?? DEFAULT_EXPENSE_CATEGORY.color;
+  // wire up in M12: cat.children?.length > 0
+  const hasChildren = false;
+  const drillable = hasChildren && !editMode;
+  const hovered = bodyHovered && !editMode;
+
+  return (
+    <div
+      className="border border-border rounded-[10px] overflow-hidden transition-colors"
+      style={hovered ? { borderColor: `${color}80` } : undefined}
+    >
+      <div
+        className="relative flex flex-col items-center justify-center gap-1.5 p-3 text-center cursor-pointer transition-colors"
+        onMouseEnter={() => setBodyHovered(true)}
+        onMouseLeave={() => setBodyHovered(false)}
+        style={hovered ? { backgroundColor: `${color}10` } : undefined}
+      >
+        {editMode && (
+          <>
+            {!cat.isDefault && (
+              <button
+                type="button"
+                onClick={() => onDelete(cat)}
+                className="absolute top-1.5 left-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded bg-expense-subtle border border-border text-expense"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => onEdit(cat)}
+              className="absolute top-1.5 right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded bg-surface-raised border border-border text-muted-foreground"
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+          </>
+        )}
+
+        {!editMode && hasChildren && (
+          <div className="absolute top-1.5 right-1.5">
+            <ChevronRight className="h-3 w-3" style={{ color }} />
+          </div>
+        )}
+
+        <div
+          className="flex h-10 w-10 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${color}20` }}
+        >
+          <IconComp className="h-5 w-5" style={{ color }} />
+        </div>
+        <p className="text-[10px] leading-tight text-muted-foreground">{cat.name}</p>
+        <p className="font-mono text-xs font-semibold text-foreground">
+          €{amount.toLocaleString("en-US")}
+        </p>
+      </div>
+
+      {!editMode && (
+        <button
+          type="button"
+          onClick={() => onAdd(String(cat.id))}
+          onMouseEnter={() => setAddHovered(true)}
+          onMouseLeave={() => setAddHovered(false)}
+          className="w-full cursor-pointer border-t border-border py-1 text-center transition-colors"
+          style={{
+            backgroundColor: addHovered ? `${color}20` : undefined,
+            color: addHovered ? color : undefined,
+          }}
+        >
+          <span
+            className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground transition-colors"
+            style={{ color: addHovered ? color : undefined }}
+          >
+            + Add
+          </span>
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function ExpensesByCategory({ total, categories }: ExpensesByCategoryProps) {
@@ -61,14 +155,18 @@ export function ExpensesByCategory({ total, categories }: ExpensesByCategoryProp
         <button
           type="button"
           onClick={() => setEditMode((m) => !m)}
-          className="cursor-pointer text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className={`flex cursor-pointer items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium transition-colors ${
+            editMode
+              ? "bg-surface-raised text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
         >
+          <SlidersHorizontal className="h-3 w-3" />
           {editMode ? "Done" : "Edit categories"}
         </button>
       </div>
 
       <div className="flex items-center gap-8">
-        {/* Donut chart */}
         <div className="relative flex h-44 w-44 shrink-0 items-center justify-center">
           <div
             className="h-44 w-44 rounded-full"
@@ -79,87 +177,35 @@ export function ExpensesByCategory({ total, categories }: ExpensesByCategoryProp
               <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Total
               </p>
-              <p className="text-lg font-bold text-foreground">
+              <p className="font-mono text-lg font-bold text-foreground">
                 €{total.toLocaleString("en-US")}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Category grid */}
-        <div className="grid flex-1 grid-cols-6 gap-x-4 gap-y-5">
+        <div className="grid flex-1 grid-cols-6 gap-2.5">
           {apiCategories.map((cat) => {
-            const IconComp =
-              getIconComponent(cat.icon) ?? DEFAULT_EXPENSE_CATEGORY.icon;
-            const color = cat.color ?? DEFAULT_EXPENSE_CATEGORY.color;
             const amount =
               categories.find((c) => c.label === cat.name)?.amount ?? 0;
-
-            const iconEl = (
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{ backgroundColor: `${color}20` }}
-              >
-                <IconComp className="h-5 w-5" style={{ color }} />
-              </div>
-            );
-
-            if (editMode) {
-              return (
-                <div
-                  key={cat.id}
-                  className="flex flex-col items-center gap-1.5 text-center"
-                >
-                  {iconEl}
-                  <p className="text-[10px] leading-tight text-muted-foreground">
-                    {cat.name}
-                  </p>
-                  <div className="flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(cat)}
-                      className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    {!cat.isDefault && (
-                      <button
-                        type="button"
-                        onClick={() => setDeleteTarget(cat)}
-                        className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-expense/10 hover:text-expense"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            }
-
             return (
-              <button
+              <CategoryCell
                 key={cat.id}
-                type="button"
-                onClick={() => openAddTransactionWithCategory(cat.id)}
-                className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg p-1 text-center transition-colors hover:bg-surface-raised"
-              >
-                {iconEl}
-                <p className="text-[10px] leading-tight text-muted-foreground">
-                  {cat.name}
-                </p>
-                <p className="text-xs font-semibold text-foreground">
-                  €{amount.toLocaleString("en-US")}
-                </p>
-              </button>
+                cat={cat}
+                amount={amount}
+                editMode={editMode}
+                onEdit={openEdit}
+                onDelete={setDeleteTarget}
+                onAdd={openAddTransactionWithCategory}
+              />
             );
           })}
 
-          {/* Add category — only in edit mode */}
           {editMode && (
             <button
               type="button"
               onClick={openCreate}
-              className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg p-1 text-center transition-colors hover:bg-surface-raised"
+              className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-border p-3 text-center transition-colors hover:bg-surface-raised"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed border-border">
                 <Plus className="h-5 w-5 text-muted-foreground" />
