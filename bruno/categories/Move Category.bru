@@ -1,0 +1,21 @@
+meta {
+  name: Move Category
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/categories/:id/move
+  body: json
+  auth: none
+}
+
+params:path {
+  id: <category-id-here>
+}
+
+body:json {
+  {
+    "parentId": null
+  }
+}
