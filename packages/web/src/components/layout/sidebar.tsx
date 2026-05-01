@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Palette,
   Receipt,
+  Tag,
   Wallet,
 } from "lucide-react";
 import { useAccounts } from "../../api/accounts";
@@ -69,6 +70,12 @@ export function Sidebar() {
           to="/accounts"
           icon={<Wallet className="h-4 w-4" />}
           label="Accounts"
+          collapsed={collapsed}
+        />
+        <NavLink
+          to="/categories"
+          icon={<Tag className="h-4 w-4" />}
+          label="Categories"
           collapsed={collapsed}
         />
         <NavLink
