@@ -10,7 +10,7 @@ export async function listCategories(
   type: "income" | "expense" | undefined,
   db: Database,
 ): Promise<Category[]> {
-  return repo.findAll(type, db);
+  return repo.findTree(type, db);
 }
 
 export async function getCategory(id: string, db: Database): Promise<Category | null> {
@@ -44,6 +44,34 @@ export async function updateCategory(
     throw badRequest("Cannot change the type of a default category");
   }
   return repo.update(id, data, db);
+}
+
+export async function moveCategory(
+  id: string,
+  newParentId: string | null,
+  db: Database,
+): Promise<Category | null> {
+  const existing = await repo.findById(id, db);
+  if (!existing) return null;
+
+  if (newParentId) {
+    const parent = await repo.findById(newParentId, db);
+    if (!parent) throw badRequest("Parent category not found");
+    if (parent.type !== existing.type) {
+      throw badRequest(
+        `Parent category type "${parent.type}" does not match category type "${existing.type}"`,
+      );
+    }
+  }
+
+  return repo.move(id, newParentId, db);
+}
+
+export async function reorderCategories(
+  items: { id: string; sortOrder: number }[],
+  db: Database,
+): Promise<void> {
+  return repo.reorder(items, db);
 }
 
 export async function deleteCategory(

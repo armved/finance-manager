@@ -4,6 +4,8 @@ import {
   createCategorySchema,
   updateCategorySchema,
   deleteCategoryQuerySchema,
+  moveCategorySchema,
+  reorderCategoriesSchema,
 } from "@finance-manager/shared";
 import * as service from "./category.service";
 
@@ -30,10 +32,26 @@ export const categoryRoutes = fp(async (fastify: FastifyInstance) => {
     return category;
   });
 
+  // ── PUT /api/categories/reorder ──────────────────────────────────────────
+  fastify.put("/api/categories/reorder", async (request, reply) => {
+    const { items } = reorderCategoriesSchema.parse(request.body);
+    await service.reorderCategories(items, request.server.db);
+    reply.code(204).send();
+  });
+
   // ── PUT /api/categories/:id ───────────────────────────────────────────────
   fastify.put<{ Params: { id: string } }>("/api/categories/:id", async (request, reply) => {
     const data = updateCategorySchema.parse(request.body);
     const category = await service.updateCategory(request.params.id, data, request.server.db);
+    if (!category) return reply.notFound("Category not found");
+    return category;
+  });
+
+  // ── PUT /api/categories/:id/move ─────────────────────────────────────────
+  // Body: { parentId: string | null }  (null = make it a root category)
+  fastify.put<{ Params: { id: string } }>("/api/categories/:id/move", async (request, reply) => {
+    const { parentId } = moveCategorySchema.parse(request.body);
+    const category = await service.moveCategory(request.params.id, parentId, request.server.db);
     if (!category) return reply.notFound("Category not found");
     return category;
   });

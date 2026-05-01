@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import { categories, transactions } from "../../db/schema";
 import type { Category, CreateCategoryInput, UpdateCategoryInput } from "@finance-manager/shared";
@@ -15,6 +15,7 @@ function toCategory(row: typeof categories.$inferSelect): Category {
     isDefault: row.isDefault,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    children: [],
   };
 }
 
@@ -27,6 +28,100 @@ export async function findAll(
     orderBy: [asc(categories.sortOrder), asc(categories.name)],
   });
   return rows.map(toCategory);
+}
+
+type RawCategoryRow = {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  type: "income" | "expense";
+  sort_order: number;
+  icon: string | null;
+  color: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function findTree(
+  type: "income" | "expense" | undefined,
+  db: Database,
+): Promise<Category[]> {
+  const whereBase = type
+    ? sql`WHERE parent_id IS NULL AND type = ${type}`
+    : sql`WHERE parent_id IS NULL`;
+
+  const result = await db.execute<RawCategoryRow>(sql`
+    WITH RECURSIVE category_tree AS (
+      SELECT *, 0 AS depth FROM categories ${whereBase}
+      UNION ALL
+      SELECT c.*, ct.depth + 1
+      FROM categories c
+      JOIN category_tree ct ON c.parent_id = ct.id
+    )
+    SELECT * FROM category_tree ORDER BY depth, sort_order, name
+  `);
+
+  const map = new Map<string, Category>();
+  const roots: Category[] = [];
+
+  for (const row of result) {
+    const node: Category = {
+      id: row.id,
+      name: row.name,
+      parentId: row.parent_id ?? null,
+      type: row.type,
+      sortOrder: row.sort_order,
+      icon: row.icon ?? null,
+      color: row.color ?? null,
+      isDefault: row.is_default,
+      createdAt: String(row.created_at),
+      updatedAt: String(row.updated_at),
+      children: [],
+    };
+    map.set(node.id, node);
+    if (!node.parentId) {
+      roots.push(node);
+    } else {
+      map.get(node.parentId)?.children.push(node);
+    }
+  }
+
+  return roots;
+}
+
+export async function move(
+  id: string,
+  newParentId: string | null,
+  db: Database,
+): Promise<Category | null> {
+  if (newParentId) {
+    // Cycle detection: walk up from newParentId; if we reach id, it's a cycle
+    let current: string | null = newParentId;
+    const visited = new Set<string>();
+    while (current) {
+      if (current === id) {
+        throw Object.assign(new Error("Cannot move a category into its own descendant"), {
+          statusCode: 400,
+        });
+      }
+      if (visited.has(current)) break;
+      visited.add(current);
+      const parentRow: { parentId: string | null } | undefined =
+        await db.query.categories.findFirst({
+          where: eq(categories.id, current),
+          columns: { parentId: true },
+        });
+      current = parentRow?.parentId ?? null;
+    }
+  }
+
+  const [row] = await db
+    .update(categories)
+    .set({ parentId: newParentId })
+    .where(eq(categories.id, id))
+    .returning();
+  return row ? toCategory(row) : null;
 }
 
 export async function findById(id: string, db: Database): Promise<Category | null> {
@@ -90,6 +185,20 @@ export async function update(
     .where(eq(categories.id, id))
     .returning();
   return row ? toCategory(row) : null;
+}
+
+export async function reorder(
+  items: { id: string; sortOrder: number }[],
+  db: Database,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    for (const { id, sortOrder } of items) {
+      await tx
+        .update(categories)
+        .set({ sortOrder })
+        .where(eq(categories.id, id));
+    }
+  });
 }
 
 export async function reassignAndDelete(

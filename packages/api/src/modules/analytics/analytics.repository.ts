@@ -1,6 +1,6 @@
-import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, gte, lte, sql } from "drizzle-orm";
 import type { Database } from "../../db";
-import { categories, transactions } from "../../db/schema";
+import { transactions } from "../../db/schema";
 
 export interface DashboardData {
   summary: {
@@ -15,6 +15,15 @@ export interface DashboardData {
     amount: number;
   }>;
 }
+
+type ExpenseByCategoryRow = {
+  category_id: string;
+  name: string;
+  icon: string | null;
+  color: string | null;
+  sort_order: number;
+  amount: string;
+};
 
 export async function getDashboard(
   startDate: string,
@@ -34,27 +43,34 @@ export async function getDashboard(
       ),
     );
 
-  const expenseRows = await db
-    .select({
-      categoryId: categories.id,
-      name: categories.name,
-      icon: categories.icon,
-      color: categories.color,
-      amount: sql<string>`COALESCE(SUM(${transactions.amount}::numeric), 0)`,
-    })
-    .from(categories)
-    .leftJoin(
-      transactions,
-      and(
-        eq(transactions.categoryId, categories.id),
-        eq(transactions.type, "expense"),
-        gte(transactions.transactionDate, startDate),
-        lte(transactions.transactionDate, endDate),
-      ),
+  // Recursive CTE: for each category, collect itself and all descendants,
+  // then sum transactions across the whole subtree.
+  const expenseRows = await db.execute<ExpenseByCategoryRow>(sql`
+    WITH RECURSIVE descendants AS (
+      SELECT id AS root_id, id AS member_id FROM categories
+      UNION ALL
+      SELECT d.root_id, c.id
+      FROM categories c
+      JOIN descendants d ON c.parent_id = d.member_id
     )
-    .where(eq(categories.type, "expense"))
-    .groupBy(categories.id, categories.name, categories.icon, categories.color)
-    .orderBy(asc(categories.sortOrder), asc(categories.name));
+    SELECT
+      c.id           AS category_id,
+      c.name         AS name,
+      c.icon         AS icon,
+      c.color        AS color,
+      c.sort_order   AS sort_order,
+      COALESCE(SUM(t.amount::numeric), 0) AS amount
+    FROM categories c
+    JOIN descendants d ON d.root_id = c.id
+    LEFT JOIN transactions t
+      ON t.category_id = d.member_id
+      AND t.type = 'expense'
+      AND t.transaction_date >= ${startDate}
+      AND t.transaction_date <= ${endDate}
+    WHERE c.type = 'expense'
+    GROUP BY c.id, c.name, c.icon, c.color, c.sort_order
+    ORDER BY c.sort_order, c.name
+  `);
 
   return {
     summary: {
@@ -62,7 +78,7 @@ export async function getDashboard(
       totalExpenses: parseFloat(summaryRow?.totalExpenses ?? "0"),
     },
     expensesByCategory: expenseRows.map((r) => ({
-      categoryId: r.categoryId,
+      categoryId: r.category_id,
       name: r.name,
       icon: r.icon ?? null,
       color: r.color ?? null,
