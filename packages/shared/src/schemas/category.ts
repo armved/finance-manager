@@ -20,6 +20,21 @@ export const deleteCategoryQuerySchema = z.object({
   reassignToCategoryId: z.string().uuid("Invalid category ID").optional(),
 });
 
+export const moveCategorySchema = z.object({
+  parentId: z.string().uuid("Invalid parent category ID").nullable(),
+});
+
+export const reorderCategoriesSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      sortOrder: z.number().int().nonnegative(),
+    }),
+  ),
+});
+
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
 export type DeleteCategoryQuery = z.infer<typeof deleteCategoryQuerySchema>;
+export type MoveCategoryInput = z.infer<typeof moveCategorySchema>;
+export type ReorderCategoriesInput = z.infer<typeof reorderCategoriesSchema>;

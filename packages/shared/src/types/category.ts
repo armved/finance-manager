@@ -11,4 +11,5 @@ export interface Category {
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
+  children: Category[];
 }
