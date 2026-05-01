@@ -3,7 +3,7 @@ set -e
 
 echo "=== Running database migrations ==="
 cd /app/packages/api
-NO_COLOR=1 CI=true ./node_modules/.bin/drizzle-kit migrate
+node --import tsx/esm src/db/migrate.ts
 echo "=== Migrations complete ==="
 
 echo "=== Starting server ==="
