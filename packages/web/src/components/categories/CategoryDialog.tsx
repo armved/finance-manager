@@ -3,16 +3,16 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import type { Category } from "@finance-manager/shared";
 import { CATEGORY_PALETTE } from "../../lib/category-meta";
 import { CATEGORY_ICONS } from "../../lib/category-icons";
 import {
+  useCategories,
   useCreateCategory,
   useDeleteCategory,
   useUpdateCategory,
 } from "../../api/categories";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -29,6 +29,9 @@ interface Props {
   mode: "create" | "edit";
   category?: Category;
   defaultType?: "income" | "expense";
+  /** When set, creates a subcategory under this parent */
+  parentId?: string | null;
+  parentName?: string;
 }
 
 export function CategoryDialog({
@@ -37,12 +40,18 @@ export function CategoryDialog({
   mode,
   category,
   defaultType = "expense",
+  parentId,
+  parentName,
 }: Props) {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [reassignToCategoryId, setReassignToCategoryId] = useState<string>("");
 
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
+
+  const { data: allCategories } = useCategories(category?.type);
+  const reassignOptions = (allCategories ?? []).filter((c) => c.id !== category?.id);
 
   const {
     register,
@@ -68,7 +77,10 @@ export function CategoryDialog({
 
   function onSubmit(data: FormValues) {
     if (mode === "create") {
-      createCategory.mutate(data, { onSuccess: () => onOpenChange(false) });
+      createCategory.mutate(
+        { ...data, parentId: parentId ?? undefined },
+        { onSuccess: () => onOpenChange(false) },
+      );
     } else if (category) {
       updateCategory.mutate(
         { id: category.id, ...data },
@@ -80,7 +92,10 @@ export function CategoryDialog({
   function handleDelete() {
     if (!category) return;
     deleteCategory.mutate(
-      { id: category.id },
+      {
+        id: category.id,
+        reassignToCategoryId: reassignToCategoryId || undefined,
+      },
       {
         onSuccess: () => {
           setConfirmDeleteOpen(false);
@@ -98,7 +113,11 @@ export function CategoryDialog({
           <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface p-6 shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
             <div className="mb-5 flex items-center justify-between">
               <Dialog.Title className="text-base font-semibold text-foreground">
-                {mode === "create" ? "New Category" : "Edit Category"}
+                {mode === "edit"
+                  ? "Edit Category"
+                  : parentId
+                    ? `New subcategory${parentName ? ` under ${parentName}` : ""}`
+                    : "New Category"}
               </Dialog.Title>
               <Dialog.Close asChild>
                 <button className="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground">
@@ -126,8 +145,8 @@ export function CategoryDialog({
                 )}
               </div>
 
-              {/* Type — hidden for default categories in edit mode */}
-              {!(mode === "edit" && category?.isDefault) && (
+              {/* Type — hidden for default categories and subcategory creation (type inherits from parent) */}
+              {!(mode === "edit" && category?.isDefault) && !parentId && (
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                     Type
@@ -232,16 +251,62 @@ export function CategoryDialog({
         </Dialog.Portal>
       </Dialog.Root>
 
-      <ConfirmDialog
-        open={confirmDeleteOpen}
-        onOpenChange={setConfirmDeleteOpen}
-        title="Delete category?"
-        description="All transactions in this category will be moved to Uncategorized."
-        confirmLabel="Delete"
-        destructive
-        isPending={deleteCategory.isPending}
-        onConfirm={handleDelete}
-      />
+      <Dialog.Root open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface p-6 shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <Dialog.Title className="text-base font-semibold text-foreground">
+                Delete category?
+              </Dialog.Title>
+              <button
+                onClick={() => setConfirmDeleteOpen(false)}
+                className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <Dialog.Description className="mb-4 text-sm text-muted-foreground">
+              Move transactions from <span className="font-medium text-foreground">"{category?.name}"</span> to:
+            </Dialog.Description>
+
+            <div className="mb-5 relative">
+              <select
+                value={reassignToCategoryId}
+                onChange={(e) => setReassignToCategoryId(e.target.value)}
+                className="w-full appearance-none rounded-lg border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground focus:border-primary focus:outline-none cursor-pointer"
+              >
+                <option value="">Uncategorized (default)</option>
+                {reassignOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteOpen(false)}
+                className="flex-1 cursor-pointer rounded-lg border border-border py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteCategory.isPending}
+                onClick={handleDelete}
+                className="flex-1 cursor-pointer rounded-lg bg-expense py-2 text-sm font-medium text-white transition-colors hover:bg-expense/80 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deleteCategory.isPending ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }
