@@ -640,11 +640,58 @@ Includes all types — transfers shift money between accounts. Analytics always 
 
 ---
 
-### M18: Polish & Deploy 🚀
+### M18: Deploy to Raspberry Pi 🚀
 
-> *"Responsive, error-handled, and running on your Raspberry Pi."*
+> *"Running on your Pi, accessible from your local network."*
 
-#### Step 18.1 — UX Polish (~60 min)
+#### Step 18.1 — Deploy via Coolify (~2–3 hours)
+
+> **Deployment stack decided:** Coolify (self-hosted PaaS on Pi) + Docker Compose. Coolify handles webhooks and the production database. One `git push` redeploys everything. Accessed via Pi IP on local network (no public domain needed).
+
+**Key decisions baked in:**
+- **Build on Pi directly** — Pi is ARM64; building locally avoids all `docker buildx` cross-compile complexity. Build takes ~3 min but setup is trivial.
+- **`tsx` in production** — no TypeScript compile step, matches the dev setup. Fine at this scale.
+- **Coolify-managed PostgreSQL** — provisioned as a separate Coolify "Database" resource (not a compose service). Gets its own lifetime, automated backups, and a connection string injected via env var.
+- **Caddy inside web container** — proxies `/api/*` to the API service; serves the SPA with fallback routing.
+
+**Code to write (repo changes):**
+
+- [x] `packages/api/Dockerfile` — installs monorepo deps → entrypoint runs `drizzle-kit migrate` then starts Fastify via `tsx` on port 3001
+- [x] `packages/web/Dockerfile` — multi-stage: `vite build` → Caddy serves `dist/`; Caddy proxies `/api/*` → `http://api:3001`
+- [x] `packages/web/Caddyfile` — HTTP-only; serves SPA with fallback + proxies API
+- [x] `docker-compose.prod.yml` — services: `api` + `web`; all secrets via env vars; **no `db` service** (Coolify manages it separately)
+- [x] `.env.prod.example` — committed template with placeholder values (no real secrets ever committed)
+- [x] `.dockerignore` — excludes node_modules, dist, .git from build context
+
+**Coolify one-time setup (Pi config, not code):**
+
+- [x] Install Coolify on Pi
+- [x] Add Pi as a server in Coolify UI
+- [x] Create a **Database** resource → PostgreSQL (note the connection string)
+- [ ] Create a **Docker Compose** resource → point at this repo + `docker-compose.prod.yml`
+- [ ] Add env vars in Coolify UI: `DATABASE_URL`, `NODE_ENV=production`, `CORS_ORIGIN`, `WEB_PORT`
+- [ ] Set up GitHub webhook in Coolify → auto-deploy on push to `main`
+
+**Deploy flow (after setup):**
+```
+git push origin main
+  → Coolify webhook fires
+  → Pi pulls repo, builds images locally (ARM64, no cross-compile)
+  → api container: drizzle-kit migrate → Fastify starts
+  → web container: Caddy serves SPA + proxies /api
+  → Live in ~2–3 minutes
+```
+Redeploy anytime: `git push` (auto) or click "Redeploy" in Coolify UI.
+
+**Win:** `git push` from your laptop → app is live on your Pi at `http://<pi-ip>:3000`. Open it on any device on your network. **Project complete.** 🏆
+
+---
+
+### M19: UX Polish ✨
+
+> *"Toasts, error boundaries, and mobile-friendly layouts. Nice to have — do it after deploy."*
+
+#### Step 19.1 — UX Polish (~60 min)
 
 - [ ] **Toast notifications**: use `sonner` (`pnpm add sonner`) for success/error feedback on all mutations
 - [ ] **Error boundaries**: catch and display API errors gracefully instead of blank screens
@@ -654,36 +701,22 @@ Includes all types — transfers shift money between accounts. Analytics always 
 
 ---
 
-#### Step 18.2 — Docker Compose for Raspberry Pi (~60 min)
-
-- [ ] Create a `Dockerfile` for the API (multi-stage: build TS → run with Node, migrations on startup)
-- [ ] Create a `Dockerfile` for the Web (Vite build → served by Caddy)
-- [ ] Update `docker-compose.yml` to add `api` and `caddy` services alongside `db`
-- [ ] Create `Caddyfile`: reverse-proxy `/api/*` to the API, serve static files for everything else
-- [ ] Configure port forwarding (80 + 443 → Pi's local IP) and a free DDNS hostname (e.g. DuckDNS)
-- [ ] Run `docker compose up --build` on the Pi
-
-**Win:** `docker compose up` on your Raspberry Pi → open the app on your phone over HTTPS. **Project complete.** 🏆
-
----
-
 ## Quick Reference: Session Planner
 
 Can't decide what to do today? Use this:
 
-| I have... | Do this | Milestone |
-|-----------|---------|-----------|
-| 60 min | Category tree API | M11.1 |
-| 60-90 min | Category tree UI | M11.2 |
-| 30 min | Merchant API | M12.1 |
-| 45 min | Merchant autocomplete UI | M12.2 |
-| 30 min | Tag API | M13.1 |
-| 45 min | Tags UI | M13.2 |
-| 30 min | Income breakdown toggle | M14.1 |
-| 30 min | vs last month on summary cards | M14.2 |
-| 60 min | Transfer UI | M15 |
-| 30 min | Month picker on transactions page | M16 |
-| Feeling lazy | Toasts + error boundaries (easy dopamine) | M18.1 |
+| I have...    | Do this                              | Milestone |
+|--------------|--------------------------------------|-----------|
+| 30 min       | Merchant API                         | M12.1     |
+| 45 min       | Merchant autocomplete UI             | M12.2     |
+| 30 min       | Tag API                              | M13.1     |
+| 45 min       | Tags UI                              | M13.2     |
+| 30 min       | Income breakdown toggle              | M14.1     |
+| 30 min       | vs last month on summary cards       | M14.2     |
+| 60 min       | Transfer UI                          | M15       |
+| 30 min       | Month picker on transactions page    | M16       |
+| 2–3 hours    | Deploy to Pi via Coolify             | M18.1     |
+| Feeling lazy | Toasts + error boundaries (dopamine) | M19.1     |
 
 **Where you are right now:** M12 is next. Start with the merchant API.
 
