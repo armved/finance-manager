@@ -13,6 +13,8 @@ RUN pnpm install --frozen-lockfile
 COPY packages/shared/ ./packages/shared/
 COPY packages/api/ ./packages/api/
 
+RUN chmod +x /app/packages/api/entrypoint.sh
+
 EXPOSE 3001
 
-CMD ["sh", "-c", "pnpm --filter @finance-manager/api db:migrate && node --import tsx/esm packages/api/src/server.ts"]
+ENTRYPOINT ["/app/packages/api/entrypoint.sh"]
