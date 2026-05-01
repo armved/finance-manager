@@ -471,13 +471,13 @@ Includes all types — transfers shift money between accounts. Analytics always 
 
 ---
 
-### M11: Category Hierarchy
+### ✅ M11: Category Hierarchy
 
 > *"Categories can have subcategories, infinitely nested. Food > Groceries > Organic."*
 
-#### Step 11.1 — Recursive category tree API (~60 min)
+#### ✅ Step 11.1 — Recursive category tree API (~60 min)
 
-- [ ] Update `category.repository.ts`:
+- [x] Update `category.repository.ts`:
   - `findTree()` — PostgreSQL recursive CTE returning full tree:
     ```sql
     WITH RECURSIVE category_tree AS (
@@ -491,20 +491,20 @@ Includes all types — transfers shift money between accounts. Analytics always 
   - Service layer flattens rows → nested objects
   - `create(data)` accepts optional `parentId`
   - `move(id, newParentId)` with cycle detection
-- [ ] Update `GET /api/categories` to return the nested tree
-- [ ] Update shared types: `Category` gains optional `children: Category[]` and `parentId`
+- [x] Update `GET /api/categories` to return the nested tree
+- [x] Update shared types: `Category` gains optional `children: Category[]` and `parentId`
 
 **Win:** API returns nested tree. Existing flat usage still works (children defaults to `[]`).
 
 ---
 
-#### Step 11.2 — Category management UI (~60–90 min)
+#### ✅ Step 11.2 — Category management UI (~60–90 min)
 
-- [ ] Build a category management panel (accessible from sidebar or settings):
+- [x] Build a category management panel (accessible from sidebar or settings):
   - Collapsible tree view with indentation
   - Inline "Add subcategory" on each row
   - Edit name / change color-icon / delete (with reassign prompt if transactions exist)
-- [ ] Update `TransactionDialog` category selector:
+- [x] Update `TransactionDialog` category selector:
   - Render as indented grouped list (e.g. `Food › Groceries`) rather than a flat `<select>`
 
 **Win:** Visual category tree. You can nest, rename, and reorganize without touching the API directly.
@@ -685,7 +685,7 @@ Can't decide what to do today? Use this:
 | 30 min | Month picker on transactions page | M16 |
 | Feeling lazy | Toasts + error boundaries (easy dopamine) | M18.1 |
 
-**Where you are right now:** M11 is next. Start with the category tree API.
+**Where you are right now:** M12 is next. Start with the merchant API.
 
 ---
 
