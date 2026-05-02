@@ -59,7 +59,6 @@ async function seed() {
     { id: "b38b08ad-8578-40a7-a32d-34c1484e1f92", name: "Gifts",          type: "expense" as const, icon: "gift",          color: "#FF9F43" },
     { id: "9cb36c39-08b7-4e6c-aa33-12e1e7eb1c42", name: "Housing",        type: "expense" as const, icon: "home",          color: "#FF6BAE" },
     { id: "fecca075-ac7f-422f-9110-ba7596f9b13d", name: "Leisure",        type: "expense" as const, icon: "film",          color: "#FFC048" },
-    { id: "f6c36543-2120-4b16-a045-25cbdf3f2120", name: "Miscellaneous",  type: "expense" as const, icon: "layers",        color: "#95A5A6" },
     { id: "2fb75e4a-82ce-400f-b9e2-cf73a9370fb8", name: "Pets",           type: "expense" as const, icon: "paw-print",     color: "#C56BED" },
     { id: "2d323926-7ec4-489c-804c-b16e0e65e24e", name: "Salary",         type: "income"  as const, icon: "wallet",        color: "#4ade80" },
     { id: "6af5b415-e2c1-478e-83bb-13c3db4d1b12", name: "Shopping",       type: "expense" as const, icon: "shopping-cart", color: "#AADC30" },
