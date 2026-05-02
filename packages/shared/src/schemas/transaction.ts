@@ -15,11 +15,7 @@ export const createTransactionSchema = z.object({
   tagIds: z.array(z.string().uuid("Invalid tag ID")).optional(),
 });
 
-// Omit accountId (can't move a transaction between accounts after creation),
-// then make everything else optional for partial updates.
-export const updateTransactionSchema = createTransactionSchema
-  .omit({ accountId: true })
-  .partial();
+export const updateTransactionSchema = createTransactionSchema.partial();
 
 export const transactionFiltersSchema = z.object({
   startDate: dateStringSchema.optional(),

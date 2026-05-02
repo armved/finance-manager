@@ -120,7 +120,7 @@ async function seed() {
     db.insert(schema.categories).values(childCategories).onConflictDoNothing().returning(),
   ]).then(async ([r, c]) => {
     const g = await db.insert(schema.categories).values(grandchildCategories).onConflictDoNothing().returning();
-    return [r, c, g];
+    return [r, c, g] as const;
   });
 
   const inserted = rootResult.length + childResult.length + grandchildResult.length;

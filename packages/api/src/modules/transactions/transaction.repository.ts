@@ -161,6 +161,7 @@ export async function update(
     if (fields.type !== undefined) updateValues.type = fields.type;
     if (fields.amount !== undefined) updateValues.amount = String(fields.amount);
     if (fields.transactionDate !== undefined) updateValues.transactionDate = fields.transactionDate;
+    if (fields.accountId !== undefined) updateValues.accountId = fields.accountId;
     if (fields.categoryId !== undefined) updateValues.categoryId = fields.categoryId;
     if (fields.merchantId !== undefined) updateValues.merchantId = fields.merchantId;
 
