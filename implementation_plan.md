@@ -511,30 +511,30 @@ Includes all types — transfers shift money between accounts. Analytics always 
 
 ---
 
-### M12: Merchants
+### ✅ M12: Merchants
 
 > *"Transactions have a merchant (where you spent) — ~20 structured entries with autocomplete."*
 
-#### Step 12.1 — Merchant CRUD API (~30 min)
+#### ✅ Step 12.1 — Merchant CRUD API (~30 min)
 
-- [ ] Create `src/modules/merchants/`:
+- [x] Create `src/modules/merchants/`:
   - `merchant.repository.ts`: `findAll()`, `search(q)`, `create(name)`, `update(id, name)`, `delete(id)`
   - `merchant.routes.ts`: `GET /api/merchants?q=` (autocomplete), `POST`, `PUT /:id`, `DELETE /:id`
-- [ ] Update `transaction.service.ts` + `transaction.repository.ts`:
+- [x] Update `transaction.service.ts` + `transaction.repository.ts`:
   - Accept optional `merchantId` on create/update
   - Include merchant name in the list/findById response
-- [ ] Update shared schemas: add optional `merchantId` to `createTransactionSchema`
-- [ ] Add Bruno request files in `bruno/merchants/`
+- [x] Update shared schemas: add optional `merchantId` to `createTransactionSchema`
+- [x] Add Bruno request files in `bruno/merchants/`
 
 **Win:** `POST /api/transactions` now accepts a merchant. The list response includes the merchant name.
 
 ---
 
-#### Step 12.2 — Merchant autocomplete UI (~45 min)
+#### ✅ Step 12.2 — Merchant autocomplete UI (~45 min)
 
-- [ ] Add to `TransactionDialog`:
+- [x] Add to `TransactionDialog`:
   - **Merchant**: text input with live autocomplete dropdown — type to search existing merchants, press Enter or click to create new inline (no separate management screen needed)
-- [ ] Update `TransactionTable` rows to show merchant name below the category badge
+- [x] Update `TransactionTable` rows to show merchant name below the category badge
 
 **Win:** Type "Lidl" → it appears or is created on the fly. Merchant shows on every transaction row.
 
@@ -718,7 +718,7 @@ Can't decide what to do today? Use this:
 | 2–3 hours    | Deploy to Pi via Coolify             | M18.1     |
 | Feeling lazy | Toasts + error boundaries (dopamine) | M19.1     |
 
-**Where you are right now:** M12 is next. Start with the merchant API.
+**Where you are right now:** M13 is next. Start with the tag API.
 
 ---
 
