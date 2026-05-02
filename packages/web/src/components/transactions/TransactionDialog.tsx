@@ -10,6 +10,7 @@ import { useCategories } from "../../api/categories";
 import { useAccounts } from "../../api/accounts";
 import { useUIStore } from "../../store/ui";
 import { CategoryPicker, resolveCategoryDisplay } from "./CategoryPicker";
+import { MerchantInput } from "./MerchantInput";
 import { getIconComponent } from "../../lib/category-icons";
 
 const formSchema = createTransactionSchema.extend({
@@ -62,6 +63,7 @@ export function TransactionDialog() {
       transactionDate: today(),
       categoryId: "",
       accountId: "",
+      merchantId: undefined,
     },
   });
 
@@ -88,13 +90,14 @@ export function TransactionDialog() {
         transactionDate: editingTransaction.transactionDate,
         categoryId: editingTransaction.categoryId ?? "",
         accountId: editingTransaction.accountId,
+        merchantId: editingTransaction.merchantId ?? undefined,
       });
     } else {
       const cats = categoriesRef.current;
       const preselectId = preselectedCategoryIdRef.current;
       const preselectedCat = preselectId ? cats?.find((c) => c.id === preselectId) : undefined;
       const defaultCat = preselectedCat ?? cats?.find((c) => c.isDefault) ?? cats?.[0];
-      reset({ type: "expense", transactionDate: today(), categoryId: defaultCat?.id ?? "", accountId: defaultAccountId });
+      reset({ type: "expense", transactionDate: today(), categoryId: defaultCat?.id ?? "", accountId: defaultAccountId, merchantId: undefined });
     }
   // editingTransaction intentionally omitted: we only want this to run on open/close transitions
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -230,6 +233,27 @@ export function TransactionDialog() {
                   )}
                 </div>
               </>
+            )}
+
+            {/* Merchant */}
+            {!pickerOpen && (
+              <Controller
+                name="merchantId"
+                control={control}
+                render={({ field }) => (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                      Merchant <span className="text-muted-foreground/50">(optional)</span>
+                    </label>
+                    <MerchantInput
+                      key={editingTransaction?.id ?? "new"}
+                      value={field.value}
+                      defaultName={editingTransaction?.merchant?.name ?? undefined}
+                      onChange={(id) => field.onChange(id ?? undefined)}
+                    />
+                  </div>
+                )}
+              />
             )}
 
             {/* Category */}

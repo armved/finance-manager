@@ -91,7 +91,7 @@ export function TransactionTable({
             </tr>
           ) : (
             transactions.map((tx) => {
-              const name = tx.merchant?.name ?? "Transaction";
+              const merchantName = tx.merchant?.name ?? null;
               const isTransfer = tx.type === "transfer";
               const categoryColor = tx.category?.color || DEFAULT_EXPENSE_CATEGORY.color;
               const isIncome = tx.type === "income";
@@ -118,9 +118,11 @@ export function TransactionTable({
                         <span className="text-sm font-semibold leading-tight text-foreground">
                           {categoryName}
                         </span>
-                        <span className="truncate text-xs leading-tight text-muted-foreground">
-                          {name}
-                        </span>
+                        {merchantName && (
+                          <span className="truncate text-xs leading-tight text-muted-foreground">
+                            {merchantName}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </td>

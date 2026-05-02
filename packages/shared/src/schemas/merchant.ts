@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { nameSchema, iconSchema } from "./common";
+import { nameSchema } from "./common";
 
 export const createMerchantSchema = z.object({
   name: nameSchema,
-  icon: iconSchema,
 });
 
 // All fields are optional for partial updates.

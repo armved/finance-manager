@@ -1,0 +1,17 @@
+meta {
+  name: Update Merchant
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/merchants/PASTE_MERCHANT_ID
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Lidl Updated"
+  }
+}

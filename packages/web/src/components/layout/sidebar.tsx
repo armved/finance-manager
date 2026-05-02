@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Palette,
   Receipt,
+  Store,
   Tag,
   Wallet,
 } from "lucide-react";
@@ -76,6 +77,12 @@ export function Sidebar() {
           to="/categories"
           icon={<Tag className="h-4 w-4" />}
           label="Categories"
+          collapsed={collapsed}
+        />
+        <NavLink
+          to="/merchants"
+          icon={<Store className="h-4 w-4" />}
+          label="Merchants"
           collapsed={collapsed}
         />
         <NavLink
