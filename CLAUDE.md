@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Ground rules
 
 - **Never commit or push without explicit user request.** Always wait to be told before running any `git commit` or `git push`.
-- **Shell is bash on Windows.**
-- **Every clickable element must have `cursor-pointer`** (buttons, toggles, links, icon buttons). Add `disabled:cursor-not-allowed` on submit buttons that can be disabled. The working directory is already set to the repo root — never use `cd` to navigate there. Paths like `/mnt/c/...` do not exist; use Windows-style absolute paths (e.g. `C:\Users\...`) only when a tool requires an absolute path. For `pnpm` commands, run them directly from the repo root without a `cd` prefix.
+- **Always use the Bash tool for shell commands** (git, pnpm, rm, etc.) — it supports `&&`, heredocs (`<<'EOF'`), and all POSIX syntax. Never use the PowerShell tool for these; PowerShell 5.1 does not support `&&` or `<<EOF`. The Bash tool's working directory is already set to the repo root — never use `cd` to navigate there. Paths like `/mnt/c/...` do not exist; use Windows-style absolute paths (e.g. `C:\Users\...`) only when a tool requires an absolute path.
+- **Every clickable element must have `cursor-pointer`** (buttons, toggles, links, icon buttons). Add `disabled:cursor-not-allowed` on submit buttons that can be disabled.
 
 ## Commands
 
