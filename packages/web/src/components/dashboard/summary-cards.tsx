@@ -15,7 +15,7 @@ export function SummaryCards({
     n.toLocaleString("en-US", { style: "currency", currency: "EUR" });
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {/* Total Income */}
       <div className="rounded-xl border border-border bg-surface p-5">
         <div className="flex items-start justify-between">

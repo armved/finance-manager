@@ -339,8 +339,8 @@ export function ExpensesByCategory({ total, categories }: ExpensesByCategoryProp
         </button>
       </div>
 
-      <div className="flex items-center gap-8">
-        <div className="relative flex h-44 w-44 shrink-0 items-center justify-center">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
+        <div className="relative flex h-44 w-44 shrink-0 items-center justify-center self-center sm:self-auto">
           <div className="h-44 w-44 rounded-full" style={{ background: donutGradient }} />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-surface">
@@ -363,7 +363,7 @@ export function ExpensesByCategory({ total, categories }: ExpensesByCategoryProp
             items={orderedDraggable.map((c) => c.id)}
             strategy={rectSortingStrategy}
           >
-            <div className="grid flex-1 grid-cols-6 gap-2.5">
+            <div className="grid grid-cols-4 gap-2 sm:flex-1 sm:grid-cols-6 sm:gap-2.5">
               {orderedDraggable.map((cat) => (
                 <SortableCategoryCell
                   key={cat.id}

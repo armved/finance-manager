@@ -23,7 +23,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`flex h-screen ${collapsed ? "w-14" : "w-56"} shrink-0 flex-col overflow-hidden border-r border-border bg-surface transition-[width] duration-200 ease-in-out`}
+      className={`hidden md:flex h-screen ${collapsed ? "w-14" : "w-56"} shrink-0 flex-col overflow-hidden border-r border-border bg-surface transition-[width] duration-200 ease-in-out`}
     >
       {/* Brand */}
       <div className={`flex items-center py-4 ${collapsed ? "justify-center px-0" : "justify-between px-4"}`}>

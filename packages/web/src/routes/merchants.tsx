@@ -76,7 +76,7 @@ function MerchantsPage() {
                   <th className="px-6 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <th className="hidden px-6 py-3 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:table-cell">
                     Added
                   </th>
                   <th className="w-24 px-4 py-3" />
@@ -91,11 +91,11 @@ function MerchantsPage() {
                     <td className="px-6 py-3">
                       <span className="text-sm font-medium text-foreground">{merchant.name}</span>
                     </td>
-                    <td className="px-6 py-3 text-sm text-muted-foreground">
+                    <td className="hidden px-6 py-3 text-sm text-muted-foreground sm:table-cell">
                       {formatDate(merchant.createdAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
                         <button
                           onClick={() => handleEdit(merchant)}
                           className="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"

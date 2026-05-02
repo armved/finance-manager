@@ -26,7 +26,7 @@ function TransactionsPage() {
     <>
       <PageHeader title="Transactions" />
       <PageContainer>
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
           <div className="flex gap-2">
             {FILTERS.map(({ key, label }) => (
               <button

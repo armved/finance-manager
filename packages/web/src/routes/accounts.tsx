@@ -42,7 +42,7 @@ function AccountCard({
             <p className="text-xs text-muted-foreground">{account.currencyCode}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
           <button
             onClick={() => onEdit(account)}
             className="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-surface-raised hover:text-foreground"
