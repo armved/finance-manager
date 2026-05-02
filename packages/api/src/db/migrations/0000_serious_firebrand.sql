@@ -1,10 +1,18 @@
-CREATE TYPE "public"."category_type" AS ENUM('income', 'expense', 'any');--> statement-breakpoint
-CREATE TYPE "public"."transaction_type" AS ENUM('income', 'expense');--> statement-breakpoint
+CREATE TYPE "public"."category_type" AS ENUM('income', 'expense');--> statement-breakpoint
+CREATE TYPE "public"."transaction_type" AS ENUM('income', 'expense', 'transfer');--> statement-breakpoint
+CREATE TABLE "currencies" (
+	"code" varchar(3) PRIMARY KEY NOT NULL,
+	"name" varchar(50) NOT NULL,
+	"symbol" varchar(5) NOT NULL,
+	"decimal_places" integer DEFAULT 2 NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "accounts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"currency_code" varchar(3) NOT NULL,
-	"initial_balance" numeric(12, 2) DEFAULT '0' NOT NULL,
+	"adjusted_balance" numeric(12, 2) DEFAULT '0' NOT NULL,
+	"adjusted_at" timestamp with time zone,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
@@ -14,20 +22,13 @@ CREATE TABLE "categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"parent_id" uuid,
-	"type" "category_type" DEFAULT 'any' NOT NULL,
+	"type" "category_type" NOT NULL,
 	"sort_order" integer DEFAULT 0 NOT NULL,
 	"icon" varchar(50),
 	"color" varchar(7),
 	"is_default" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "currencies" (
-	"code" varchar(3) PRIMARY KEY NOT NULL,
-	"name" varchar(50) NOT NULL,
-	"symbol" varchar(5) NOT NULL,
-	"decimal_places" integer DEFAULT 2 NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "merchants" (
@@ -56,7 +57,7 @@ CREATE TABLE "transactions" (
 	"amount" numeric(12, 2) NOT NULL,
 	"transaction_date" date NOT NULL,
 	"account_id" uuid NOT NULL,
-	"category_id" uuid NOT NULL,
+	"category_id" uuid,
 	"merchant_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL

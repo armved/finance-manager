@@ -1,9 +1,47 @@
 {
-  "id": "49183b9f-2095-4804-b919-229f0ad25427",
+  "id": "bb02ee26-fbe2-48a2-b9a1-693773954b0b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.currencies": {
+      "name": "currencies",
+      "schema": "",
+      "columns": {
+        "code": {
+          "name": "code",
+          "type": "varchar(3)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decimal_places": {
+          "name": "decimal_places",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 2
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.accounts": {
       "name": "accounts",
       "schema": "",
@@ -27,12 +65,18 @@
           "primaryKey": false,
           "notNull": true
         },
-        "initial_balance": {
-          "name": "initial_balance",
+        "adjusted_balance": {
+          "name": "adjusted_balance",
           "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true,
           "default": "'0'"
+        },
+        "adjusted_at": {
+          "name": "adjusted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         },
         "is_active": {
           "name": "is_active",
@@ -106,8 +150,7 @@
           "type": "category_type",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'any'"
+          "notNull": true
         },
         "sort_order": {
           "name": "sort_order",
@@ -166,44 +209,6 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.currencies": {
-      "name": "currencies",
-      "schema": "",
-      "columns": {
-        "code": {
-          "name": "code",
-          "type": "varchar(3)",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "symbol": {
-          "name": "symbol",
-          "type": "varchar(5)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "decimal_places": {
-          "name": "decimal_places",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 2
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -388,7 +393,7 @@
           "name": "category_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "merchant_id": {
           "name": "merchant_id",
@@ -539,8 +544,7 @@
       "schema": "public",
       "values": [
         "income",
-        "expense",
-        "any"
+        "expense"
       ]
     },
     "public.transaction_type": {
@@ -548,7 +552,8 @@
       "schema": "public",
       "values": [
         "income",
-        "expense"
+        "expense",
+        "transfer"
       ]
     }
   },
